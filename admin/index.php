@@ -303,6 +303,11 @@ try {
                     <div class="stat-number"><?php echo $total_students; ?></div>
                     <div class="stat-label">Total Students</div>
                 </div>
+                <div class="mt-2">
+                    <a href="student_management.php" class="btn btn-sm btn-success w-100">
+                        <i class="fas fa-cog me-1"></i>Comprehensive Management
+                    </a>
+                </div>
             </div>
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="stat-card success">

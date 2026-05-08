@@ -5,10 +5,13 @@
     left: 0;
     width: 280px;
     height: 100vh;
+    max-height: 100vh;
     background: linear-gradient(180deg, #7C3AED, #5B21B6);
     padding: 30px 20px;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     z-index: 1000;
+    box-sizing: border-box;
 }
 
 .sidebar h4 {

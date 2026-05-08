@@ -14,6 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $last_name = clean_input($_POST['last_name']);
         $date_of_birth = $_POST['date_of_birth'];
         $gender = $_POST['gender'];
+        $mother_name = clean_input($_POST['mother_name']);
+        $father_name = clean_input($_POST['father_name']);
         $class_id = !empty($_POST['class_id']) ? $_POST['class_id'] : null;
         $parent_id = !empty($_POST['parent_id']) ? $_POST['parent_id'] : null;
         $admission_date = $_POST['admission_date'];
@@ -30,14 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $database = new Database();
             $db = $database->getConnection();
             
-            $query = "INSERT INTO students (first_name, last_name, date_of_birth, gender, class_id, parent_id, admission_date, student_id, address, medical_info, allergies, emergency_contact, emergency_phone) 
-                      VALUES (:first_name, :last_name, :date_of_birth, :gender, :class_id, :parent_id, :admission_date, :student_id, :address, :medical_info, :allergies, :emergency_contact, :emergency_phone)";
+            $query = "INSERT INTO students (first_name, last_name, date_of_birth, gender, mother_name, father_name, class_id, parent_id, admission_date, student_id, address, medical_info, allergies, emergency_contact, emergency_phone) 
+                      VALUES (:first_name, :last_name, :date_of_birth, :gender, :mother_name, :father_name, :class_id, :parent_id, :admission_date, :student_id, :address, :medical_info, :allergies, :emergency_contact, :emergency_phone)";
             
             $stmt = $db->prepare($query);
             $stmt->bindParam(':first_name', $first_name);
             $stmt->bindParam(':last_name', $last_name);
             $stmt->bindParam(':date_of_birth', $date_of_birth);
             $stmt->bindParam(':gender', $gender);
+            $stmt->bindParam(':mother_name', $mother_name);
+            $stmt->bindParam(':father_name', $father_name);
             $stmt->bindParam(':class_id', $class_id);
             $stmt->bindParam(':parent_id', $parent_id);
             $stmt->bindParam(':admission_date', $admission_date);
@@ -79,6 +83,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $last_name = clean_input($_POST['last_name']);
         $date_of_birth = $_POST['date_of_birth'];
         $gender = $_POST['gender'];
+        $mother_name = clean_input($_POST['mother_name']);
+        $father_name = clean_input($_POST['father_name']);
         $class_id = !empty($_POST['class_id']) ? $_POST['class_id'] : null;
         $parent_id = !empty($_POST['parent_id']) ? $_POST['parent_id'] : null;
         $address = clean_input($_POST['address']);
@@ -91,13 +97,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $database = new Database();
             $db = $database->getConnection();
             
-            $query = "UPDATE students SET first_name = :first_name, last_name = :last_name, date_of_birth = :date_of_birth, gender = :gender, class_id = :class_id, parent_id = :parent_id, address = :address, medical_info = :medical_info, allergies = :allergies, emergency_contact = :emergency_contact, emergency_phone = :emergency_phone WHERE id = :student_id";
+            $query = "UPDATE students SET first_name = :first_name, last_name = :last_name, date_of_birth = :date_of_birth, gender = :gender, mother_name = :mother_name, father_name = :father_name, class_id = :class_id, parent_id = :parent_id, address = :address, medical_info = :medical_info, allergies = :allergies, emergency_contact = :emergency_contact, emergency_phone = :emergency_phone WHERE id = :student_id";
             
             $stmt = $db->prepare($query);
             $stmt->bindParam(':first_name', $first_name);
             $stmt->bindParam(':last_name', $last_name);
             $stmt->bindParam(':date_of_birth', $date_of_birth);
             $stmt->bindParam(':gender', $gender);
+            $stmt->bindParam(':mother_name', $mother_name);
+            $stmt->bindParam(':father_name', $father_name);
             $stmt->bindParam(':class_id', $class_id);
             $stmt->bindParam(':parent_id', $parent_id);
             $stmt->bindParam(':address', $address);
@@ -220,6 +228,8 @@ try {
             left: 0;
             width: 250px;
             z-index: 1000;
+            overflow-y: auto;
+            max-height: 100vh;
         }
         
         .sidebar .nav-link {
@@ -399,9 +409,14 @@ try {
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4>Student Management</h4>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
-                <i class="fas fa-plus me-2"></i>Add New Student
-            </button>
+            <div>
+                <a href="student_management.php" class="btn btn-success me-2">
+                    <i class="fas fa-cog me-2"></i>Comprehensive Student Management
+                </a>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i class="fas fa-plus me-2"></i>Add New Student
+                </button>
+            </div>
         </div>
 
         <?php
@@ -417,6 +432,40 @@ try {
             endforeach;
         endif;
         ?>
+
+        <!-- Comprehensive Student Management Info -->
+        <div class="alert alert-info mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle fa-2x me-3"></i>
+                <div>
+                    <h6 class="mb-2">🎓 Complete Student Management System Available</h6>
+                    <p class="mb-2">Access the comprehensive student management system for advanced features including:</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><i class="fas fa-chart-line me-2 text-primary"></i>Academic Progress Tracking</li>
+                                <li><i class="fas fa-star me-2 text-warning"></i>Behavior & Conduct Management</li>
+                                <li><i class="fas fa-heartbeat me-2 text-danger"></i>Health & Medical Records</li>
+                                <li><i class="fas fa-comments me-2 text-success"></i>Parent Communication Hub</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="mb-0">
+                                <li><i class="fas fa-file-alt me-2 text-info"></i>Document Management</li>
+                                <li><i class="fas fa-dollar-sign me-2 text-success"></i>Fee Tracking & Payments</li>
+                                <li><i class="fas fa-bus me-2 text-primary"></i>Transportation Management</li>
+                                <li><i class="fas fa-images me-2 text-warning"></i>Student Portfolio</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="student_management.php" class="btn btn-success">
+                            <i class="fas fa-arrow-right me-2"></i>Go to Comprehensive Student Management
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Search Box -->
         <div class="search-box">
@@ -447,9 +496,9 @@ try {
         <div id="studentsList">
             <?php if (!empty($students)): ?>
                 <?php foreach ($students as $student): ?>
-                    <div class="student-card" data-name="<?php echo strtolower($student['first_name'] . ' ' . $student['last_name']); ?>" data-class="<?php echo $student['class_id']; ?>" data-gender="<?php echo $student['gender']; ?>">
+                    <div class="student-card" data-name="<?php echo strtolower($student['first_name'] . ' ' . $student['last_name']); ?>" data-class="<?php echo $student['class_id']; ?>" data-gender="<?php echo $student['gender']; ?>" onclick="window.location.href='student_profile.php?id=<?php echo $student['id']; ?>'" style="cursor: pointer;">
                         <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center flex-grow-1" onclick="event.stopPropagation()">
                                 <div class="student-avatar">
                                     <?php if ($student['profile_image']): ?>
                                         <img src="../uploads/students/<?php echo htmlspecialchars($student['profile_image']); ?>" alt="<?php echo htmlspecialchars($student['first_name']); ?>">
@@ -471,14 +520,17 @@ try {
                                     </div>
                                 </div>
                             </div>
-                            <div class="action-buttons">
-                                <button class="btn btn-sm btn-info" onclick="viewStudent(<?php echo $student['id']; ?>)">
+                            <div class="action-buttons" onclick="event.stopPropagation()">
+                                <a href="student_management.php?id=<?php echo $student['id']; ?>" class="btn btn-sm btn-success" title="Comprehensive Student Management">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                                <button class="btn btn-sm btn-info" onclick="viewStudent(<?php echo $student['id']; ?>)" title="Quick View">
                                     <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-sm btn-warning" onclick="editStudent(<?php echo $student['id']; ?>)">
+                                <button class="btn btn-sm btn-warning" onclick="editStudent(<?php echo $student['id']; ?>)" title="Quick Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteStudent(<?php echo $student['id']; ?>)">
+                                <button class="btn btn-sm btn-danger" onclick="deleteStudent(<?php echo $student['id']; ?>)" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -542,6 +594,21 @@ try {
                                 <div class="mb-3">
                                     <label class="form-label">Admission Date</label>
                                     <input type="date" class="form-control" name="admission_date" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Mother's Name</label>
+                                    <input type="text" class="form-control" name="mother_name" placeholder="Enter mother's full name">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Father's Name</label>
+                                    <input type="text" class="form-control" name="father_name" placeholder="Enter father's full name">
                                 </div>
                             </div>
                         </div>

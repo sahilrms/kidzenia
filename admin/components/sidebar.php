@@ -27,6 +27,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link <?php echo $currentPage == 'student_management.php' ? 'active' : ''; ?>" href="student_management.php">
+                    <i class="fas fa-cog me-2"></i>Student Management
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?php echo $currentPage == 'teachers.php' ? 'active' : ''; ?>" href="teachers.php">
                     <i class="fas fa-chalkboard-teacher me-2"></i>Teachers
                 </a>
@@ -64,9 +69,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <?php endif; ?>
                 </a>
             </li>
-            <li class="nav-item">
+                        <li class="nav-item">
                 <a class="nav-link <?php echo $currentPage == 'settings.php' ? 'active' : ''; ?>" href="settings.php">
                     <i class="fas fa-cog me-2"></i>Settings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $currentPage == 'backup.php' ? 'active' : ''; ?>" href="backup.php">
+                    <i class="fas fa-download me-2"></i>Backup
                 </a>
             </li>
             <li class="nav-item">

@@ -91,20 +91,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $database = new Database();
             $db = $database->getConnection();
             
-            // Combine parent information into address field
-            $parent_info = '';
-            if ($mother_name || $father_name) {
+            // Store parent contact info in address field (email and phone only)
+            $parent_contact_info = '';
+            if ($parent_email || $parent_phone) {
                 $parent_parts = [];
-                if ($mother_name) $parent_parts[] = "Mother: " . $mother_name;
-                if ($father_name) $parent_parts[] = "Father: " . $father_name;
                 if ($parent_email) $parent_parts[] = "Email: " . $parent_email;
                 if ($parent_phone) $parent_parts[] = "Phone: " . $parent_phone;
-                $parent_info = implode(" | ", $parent_parts);
+                $parent_contact_info = implode(" | ", $parent_parts);
             }
             
             $full_address = $address;
-            if ($parent_info) {
-                $full_address = $address . ($address ? "\n\n" : "") . $parent_info;
+            if ($parent_contact_info) {
+                $full_address = $address . ($address ? "\n\n" : "") . $parent_contact_info;
             }
             
             // Start transaction
@@ -130,14 +128,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $parent_user_id = $db->lastInsertId();
             
             // Insert student record
-            $query = "INSERT INTO students (first_name, last_name, date_of_birth, gender, class_id, parent_id, admission_date, student_id, address, medical_info, allergies, emergency_contact, emergency_phone) 
-                      VALUES (:first_name, :last_name, :date_of_birth, :gender, :class_id, :parent_id, :admission_date, :student_id, :address, :medical_info, :allergies, :emergency_contact, :emergency_phone)";
+            $query = "INSERT INTO students (first_name, last_name, date_of_birth, gender, mother_name, father_name, class_id, parent_id, admission_date, student_id, address, medical_info, allergies, emergency_contact, emergency_phone) 
+                      VALUES (:first_name, :last_name, :date_of_birth, :gender, :mother_name, :father_name, :class_id, :parent_id, :admission_date, :student_id, :address, :medical_info, :allergies, :emergency_contact, :emergency_phone)";
             
             $stmt = $db->prepare($query);
             $stmt->bindParam(':first_name', $first_name);
             $stmt->bindParam(':last_name', $last_name);
             $stmt->bindParam(':date_of_birth', $date_of_birth);
             $stmt->bindParam(':gender', $gender);
+            $stmt->bindParam(':mother_name', $mother_name);
+            $stmt->bindParam(':father_name', $father_name);
             $stmt->bindParam(':class_id', $target_class_id);
             $stmt->bindParam(':parent_id', $parent_user_id);
             $stmt->bindParam(':admission_date', $admission_date);
@@ -470,6 +470,9 @@ try {
                 <button class="btn btn-outline-secondary" onclick="window.history.back()">
                     <i class="fas fa-arrow-left me-2"></i>Back to Classes
                 </button>
+                <a href="student_management.php" class="btn btn-success me-2">
+                    <i class="fas fa-cog me-2"></i>Comprehensive Student Management
+                </a>
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewStudentModal">
                     <i class="fas fa-user-plus me-2"></i>Add New Student
                 </button>

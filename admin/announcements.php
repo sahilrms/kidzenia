@@ -190,6 +190,8 @@ try {
             left: 0;
             width: 250px;
             z-index: 1000;
+            overflow-y: auto;
+            max-height: 100vh;
         }
         
         .sidebar .nav-link {

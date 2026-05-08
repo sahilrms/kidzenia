@@ -13,11 +13,11 @@ function is_logged_in() {
 }
 
 function is_admin() {
-    return isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'admin';
+    return isset($_SESSION['role']) && $_SESSION['role'] == 'admin';
 }
 
 function is_teacher() {
-    return isset($_SESSION['user_role']) && $_SESSION['user_role'] == 'teacher';
+    return isset($_SESSION['role']) && $_SESSION['role'] == 'teacher';
 }
 
 function redirect($url) {
