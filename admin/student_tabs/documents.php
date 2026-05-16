@@ -56,6 +56,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && $add_mode) {
 }
 
 // Get documents data
+$doc_stats = [
+    'total_documents' => 0,
+    'birth_cert' => 0,
+    'medical_forms' => 0,
+    'immunization' => 0,
+    'pending' => 0,
+    'approved' => 0,
+    'expired' => 0
+];
+
 try {
     $database = new Database();
     $db = $database->getConnection();

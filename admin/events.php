@@ -125,7 +125,7 @@ try {
               LEFT JOIN classes c ON e.class_id = c.id 
               LEFT JOIN users u ON e.organizer_id = u.id 
               WHERE e.is_active = 1 
-              ORDER BY e.event_date DESC";
+              ORDER BY e.created_at DESC";
     $stmt = $db->prepare($query);
     $stmt->execute();
     $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -628,6 +628,101 @@ try {
         </div>
     </div>
 
+    <!-- Edit Event Modal -->
+    <div class="modal fade" id="editEventModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Event</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" name="event_id" id="editEventId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Event Title</label>
+                                    <input type="text" class="form-control" name="title" id="editEventTitle" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Event Date</label>
+                                    <input type="date" class="form-control" name="event_date" id="editEventDate" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Event Time</label>
+                                    <input type="time" class="form-control" name="event_time" id="editEventTime">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" class="form-control" name="location" id="editEventLocation">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Event Type</label>
+                                    <select class="form-select" name="type" id="editEventType" required>
+                                        <option value="school">School</option>
+                                        <option value="class">Class</option>
+                                        <option value="holiday">Holiday</option>
+                                        <option value="meeting">Meeting</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Target Audience</label>
+                                    <select class="form-select" name="target_audience" required>
+                                        <option value="all">All</option>
+                                        <option value="parents">Parents</option>
+                                        <option value="teachers">Teachers</option>
+                                        <option value="students">Students</option>
+                                        <option value="specific_class">Specific Class</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Class (Optional)</label>
+                                    <select class="form-select" name="class_id">
+                                        <option value="">Select Class</option>
+                                        <?php foreach ($classes as $class): ?>
+                                            <option value="<?php echo $class['id']; ?>"><?php echo htmlspecialchars($class['name']); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" id="editEventDescription" rows="4" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" name="edit_event" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Update Event
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // Filter functionality
@@ -683,8 +778,39 @@ try {
         }
         
         function editEvent(id) {
-            // Implement edit functionality
-            console.log('Edit event:', id);
+            // Find the event data and populate edit modal
+            const items = document.querySelectorAll('.event-card');
+            items.forEach(item => {
+                if (item.querySelector('.action-buttons button[onclick*="' + id + '"]')) {
+                    const title = item.querySelector('h5').textContent;
+                    const dateStr = item.querySelector('.event-date').textContent.trim();
+                    const location = item.querySelector('.fa-map-marker-alt')?.parentElement?.textContent?.trim() || '';
+                    const description = item.querySelector('.text-muted.mb-2').textContent.trim();
+                    const type = item.querySelector('.event-type').textContent;
+                    
+                    // Parse date and time from the date string
+                    const dateMatch = dateStr.match(/(\w{3} \d{2}, \d{4})/);
+                    const timeMatch = dateStr.match(/(\d{1,2}:\d{2}\s[AP]M)/);
+                    
+                    document.getElementById('editEventId').value = id;
+                    document.getElementById('editEventTitle').value = title;
+                    document.getElementById('editEventDate').value = dateMatch ? formatDateForInput(dateMatch[1]) : '';
+                    document.getElementById('editEventTime').value = timeMatch ? timeMatch[1] : '';
+                    document.getElementById('editEventLocation').value = location.replace('📍', '').trim();
+                    document.getElementById('editEventDescription').value = description.replace('...', '').trim();
+                    document.getElementById('editEventType').value = type.toLowerCase();
+                    
+                    new bootstrap.Modal(document.getElementById('editEventModal')).show();
+                }
+            });
+        }
+        
+        function formatDateForInput(dateStr) {
+            const date = new Date(dateStr);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
         
         function deleteEvent(id) {

@@ -67,8 +67,20 @@ try {
     $settings_stmt->execute();
     $settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     
+    // Get CMS content for navbar
+    $cms_query = "SELECT * FROM homepage_cms WHERE is_active = 1 ORDER BY section, content_key";
+    $cms_stmt = $db->prepare($cms_query);
+    $cms_stmt->execute();
+    $cms_results = $cms_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $cms_content = [];
+    foreach ($cms_results as $row) {
+        $cms_content[$row['section']][$row['content_key']] = $row;
+    }
+    
 } catch(PDOException $exception) {
     $settings = [];
+    $cms_content = [];
 }
 ?>
 
@@ -80,242 +92,55 @@ try {
     <title>Contact Us - Kidzenia Kindergarten</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #2c3e50;
-        }
-        
-        .navbar {
-            background: white !important;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--primary-color) !important;
-        }
-        
-        .nav-link {
-            color: #2c3e50 !important;
-            font-weight: 500;
-            margin: 0 10px;
-            transition: color 0.3s;
-        }
-        
-        .nav-link:hover {
-            color: var(--primary-color) !important;
-        }
-        
-        .hero-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 80px 0 60px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .contact-section {
-            padding: 80px 0;
-        }
-        
-        .contact-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            height: 100%;
-        }
-        
-        .contact-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }
-        
-        .contact-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 25px;
-            font-size: 1.8rem;
-            color: white;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .btn-gradient {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            padding: 12px 30px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-gradient:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
-        .info-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .info-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            color: var(--primary-color);
-            font-size: 1.2rem;
-            flex-shrink: 0;
-        }
-        
-        .map-container {
-            height: 400px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-        
-        .social-link {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-        
-        .social-link:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            color: white;
-        }
-        
-        .working-hours {
-            background: rgba(102, 126, 234, 0.05);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 30px;
-        }
-        
-        .hours-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-        
-        .hours-item:last-child {
-            border-bottom: none;
-        }
-        
-        @media (max-width: 768px) {
-            .hero-section {
-                padding: 60px 0 40px;
-            }
-            
-            .contact-section {
-                padding: 60px 0;
-            }
-            
-            .contact-card {
-                padding: 30px 20px;
-            }
-            
-            .info-item {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .info-icon {
-                margin-right: 0;
-                margin-bottom: 15px;
-            }
-        }
-    </style>
+     <link rel="stylesheet" href="assets/style.css">
+     <link rel="stylesheet" href="assets/contactstyle.css">
+   
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="index.php">
-                <i class="fas fa-graduation-cap me-2"></i>Kidzenia
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php">Home</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php#about">About</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php#programs">Programs</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php#gallery">Gallery</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="index.php#events">Events</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="contact.php">Contact</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="btn btn-gradient ms-2" href="auth/login.php">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+  <nav class="navbar navbar-expand-lg fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="index.php">
+      <?php 
+      // Check if logo image exists in database
+      $logo_image = $cms_content['header']['logo_image']['content_value'] ?? $cms_content['header']['logo_image']['image_path'] ?? '';
+      if (!empty($logo_image)) {
+          // Display image logo
+          if (strpos($logo_image, 'http') === 0) {
+              $logo_src = $logo_image;
+          } else {
+              $logo_src = 'uploads/homepage/' . $logo_image;
+          }
+          echo '<img src="' . htmlspecialchars($logo_src) . '" alt="Kidzenia Logo" style="height: 40px; margin-right: 10px;">';
+      } else {
+          // Display text logo
+          echo htmlspecialchars($cms_content['header']['logo_text']['content_value'] ?? 'Kidzenia');
+      }
+      ?>
+      <?php if (empty($logo_image)): ?>
+        <span><?php echo htmlspecialchars($cms_content['header']['logo_text_span']['content_value'] ?? 'Kindergarten'); ?></span>
+      <?php endif; ?>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item"><a class="nav-link" href="./index#home"><?php echo htmlspecialchars($cms_content['nav']['link_home']['content_value'] ?? 'Home'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#programs"><?php echo htmlspecialchars($cms_content['nav']['link_programs']['content_value'] ?? 'Programs'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#about"><?php echo htmlspecialchars($cms_content['nav']['link_about']['content_value'] ?? 'About'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#gallery"><?php echo htmlspecialchars($cms_content['nav']['link_gallery']['content_value'] ?? 'Gallery'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#events"><?php echo htmlspecialchars($cms_content['nav']['link_events']['content_value'] ?? 'Events'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#contact"><?php echo htmlspecialchars($cms_content['nav']['link_contact']['content_value'] ?? 'Contact'); ?></a></li>
+      </ul>
+
+      <a href="auth/login.php" class="btn btn-theme"><?php echo htmlspecialchars($cms_content['header']['admin_login_text']['content_value'] ?? 'Admin Login'); ?></a>
+    </div>
+  </div>
+</nav>
+
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -435,48 +260,63 @@ try {
                                 <i class="fas fa-clock me-2"></i>Office Hours
                             </h5>
                             <div class="hours-item">
-                                <span>Monday - Friday</span>
-                                <span class="fw-bold">8:00 AM - 4:00 PM</span>
+                                <span><?php echo htmlspecialchars($cms_content['office_hours']['monday_friday_label']['content_value'] ?? 'Monday - Friday'); ?></span>
+                                <span class="fw-bold"><?php echo htmlspecialchars($cms_content['office_hours']['monday_friday_time']['content_value'] ?? '8:00 AM - 4:00 PM'); ?></span>
                             </div>
                             <div class="hours-item">
-                                <span>Saturday</span>
-                                <span class="fw-bold">9:00 AM - 1:00 PM</span>
+                                <span><?php echo htmlspecialchars($cms_content['office_hours']['saturday_label']['content_value'] ?? 'Saturday'); ?></span>
+                                <span class="fw-bold"><?php echo htmlspecialchars($cms_content['office_hours']['saturday_time']['content_value'] ?? '9:00 AM - 1:00 PM'); ?></span>
                             </div>
                             <div class="hours-item">
-                                <span>Sunday</span>
-                                <span class="fw-bold">Closed</span>
+                                <span><?php echo htmlspecialchars($cms_content['office_hours']['sunday_label']['content_value'] ?? 'Sunday'); ?></span>
+                                <span class="fw-bold"><?php echo htmlspecialchars($cms_content['office_hours']['sunday_time']['content_value'] ?? 'Closed'); ?></span>
                             </div>
                         </div>
                         
                         <div class="social-links">
-                            <a href="#" class="social-link">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="#" class="social-link">
-                                <i class="fab fa-youtube"></i>
-                            </a>
+                            <?php if (!empty($cms_content['footer']['facebook_url']['content_value'])): ?>
+                                <a href="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value']); ?>" class="social-link" target="_blank">
+                                    <i class="fab fa-facebook-f"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (!empty($cms_content['footer']['twitter_url']['content_value'])): ?>
+                                <a href="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value']); ?>" class="social-link" target="_blank">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (!empty($cms_content['footer']['instagram_url']['content_value'])): ?>
+                                <a href="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value']); ?>" class="social-link" target="_blank">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (!empty($cms_content['footer']['youtube_url']['content_value'])): ?>
+                                <a href="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value']); ?>" class="social-link" target="_blank">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                            <?php endif; ?>
+                            <?php if (!empty($cms_content['footer']['linkedin_url']['content_value'])): ?>
+                                <a href="<?php echo htmlspecialchars($cms_content['footer']['linkedin_url']['content_value']); ?>" class="social-link" target="_blank">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Map Section -->
+            <?php if (!empty($cms_content['contact']['map_url']['content_value'])): ?>
             <div class="row mt-5">
                 <div class="col-12">
                     <div class="contact-card">
                         <h3 class="mb-4">Find Us</h3>
                         <div class="map-container">
-                            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.123456789!2d-74.0059!3d40.7128!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDAacWfNjAuMDAyOCwgLTc0wrA2LjAwNTY!5e0!3m2!1sen!2sus!4v1234567890" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                            <iframe src="<?php echo htmlspecialchars($cms_content['contact']['map_url']['content_value']); ?>" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                         </div>
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
     </section>
 
@@ -484,17 +324,25 @@ try {
     <footer class="bg-dark text-white py-5">
         <div class="container">
             <div class="row">
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-3 mb-4">
                     <h4><i class="fas fa-graduation-cap me-2"></i>Kidzenia Kindergarten</h4>
                     <p>Where learning begins with joy. We provide a nurturing environment for your child's early education and development.</p>
                     <div class="mt-3">
-                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-lg"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-lg"></i></a>
-                        <a href="#" class="text-white me-3"><i class="fab fa-instagram fa-lg"></i></a>
-                        <a href="#" class="text-white"><i class="fab fa-youtube fa-lg"></i></a>
+                        <?php if (!empty($cms_content['footer']['facebook_url']['content_value'])): ?>
+                            <a href="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-facebook fa-lg"></i></a>
+                        <?php endif; ?>
+                        <?php if (!empty($cms_content['footer']['twitter_url']['content_value'])): ?>
+                            <a href="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-twitter fa-lg"></i></a>
+                        <?php endif; ?>
+                        <?php if (!empty($cms_content['footer']['instagram_url']['content_value'])): ?>
+                            <a href="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-instagram fa-lg"></i></a>
+                        <?php endif; ?>
+                        <?php if (!empty($cms_content['footer']['youtube_url']['content_value'])): ?>
+                            <a href="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value']); ?>" class="text-white" target="_blank"><i class="fab fa-youtube fa-lg"></i></a>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-3 mb-4">
                     <h5>Quick Links</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="index.php#about" class="text-white-50">About Us</a></li>
@@ -504,13 +352,23 @@ try {
                         <li class="mb-2"><a href="contact.php" class="text-white-50">Contact</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-4 mb-4">
+                <div class="col-lg-3 mb-4">
                     <h5>Contact Info</h5>
                     <p class="text-white-50">
                         <i class="fas fa-map-marker-alt me-2"></i><?php echo $settings['school_address'] ?? '123 Education Street, Learning City'; ?><br>
                         <i class="fas fa-phone me-2"></i><?php echo $settings['school_phone'] ?? '+1234567890'; ?><br>
                         <i class="fas fa-envelope me-2"></i><?php echo $settings['school_email'] ?? 'info@kidzenia.com'; ?>
                     </p>
+                </div>
+                <div class="col-lg-3 mb-4">
+                    <h5>Location</h5>
+                    <?php if (!empty($cms_content['contact']['map_url']['content_value'])): ?>
+                    <div class="map-container-footer" style="height: 200px; border-radius: 8px; overflow: hidden;">
+                        <iframe src="<?php echo htmlspecialchars($cms_content['contact']['map_url']['content_value']); ?>" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                    <?php else: ?>
+                    <p class="text-white-50">Map not configured. Please set the map URL in admin settings.</p>
+                    <?php endif; ?>
                 </div>
             </div>
             <hr class="bg-secondary">

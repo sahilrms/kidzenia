@@ -93,6 +93,7 @@ INSERT INTO `homepage_cms` (`section`, `content_key`, `content_type`, `content_v
 ('contact', 'contact_button_text', 'text', 'Contact Form', NULL),
 ('contact', 'phone_button_text', 'text', 'Call Us', NULL),
 ('contact', 'phone_number', 'text', '+91 9876543210', NULL),
+('contact', 'map_url', 'url', '', NULL),
 
 -- Footer
 ('footer', 'school_name', 'text', 'Kidzenia Kindergarten', NULL),
@@ -100,10 +101,19 @@ INSERT INTO `homepage_cms` (`section`, `content_key`, `content_type`, `content_v
 ('footer', 'address', 'text', '123 Education Street, Learning City', NULL),
 ('footer', 'phone', 'text', '+91 9876543210', NULL),
 ('footer', 'email', 'text', 'hello@kidzenia.com', NULL),
-('footer', 'facebook_url', 'url', '#', NULL),
-('footer', 'instagram_url', 'url', '#', NULL),
-('footer', 'youtube_url', 'url', '#', NULL),
-('footer', 'linkedin_url', 'url', '#', NULL),
+('footer', 'facebook_url', 'url', '', NULL),
+('footer', 'twitter_url', 'url', '', NULL),
+('footer', 'instagram_url', 'url', '', NULL),
+('footer', 'youtube_url', 'url', '', NULL),
+('footer', 'linkedin_url', 'url', '', NULL),
+
+-- Office Hours
+('office_hours', 'monday_friday_label', 'text', 'Monday - Friday', NULL),
+('office_hours', 'monday_friday_time', 'text', '8:00 AM - 4:00 PM', NULL),
+('office_hours', 'saturday_label', 'text', 'Saturday', NULL),
+('office_hours', 'saturday_time', 'text', '9:00 AM - 1:00 PM', NULL),
+('office_hours', 'sunday_label', 'text', 'Sunday', NULL),
+('office_hours', 'sunday_time', 'text', 'Closed', NULL),
 
 -- Navigation Links
 ('nav', 'link_home', 'text', 'Home', NULL),

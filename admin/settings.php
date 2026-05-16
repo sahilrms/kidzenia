@@ -15,7 +15,141 @@ $messageType = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['save_email_settings'])) {
+    if (isset($_POST['save_social_media'])) {
+        try {
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            $social_media = [
+                'facebook_url' => $_POST['facebook_url'] ?? '',
+                'twitter_url' => $_POST['twitter_url'] ?? '',
+                'instagram_url' => $_POST['instagram_url'] ?? '',
+                'youtube_url' => $_POST['youtube_url'] ?? '',
+                'linkedin_url' => $_POST['linkedin_url'] ?? ''
+            ];
+            
+            foreach ($social_media as $key => $value) {
+                $query = "INSERT INTO homepage_cms (section, content_key, content_type, content_value) VALUES ('footer', :key, 'url', :value) 
+                          ON DUPLICATE KEY UPDATE content_value = :value";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':key', $key);
+                $stmt->bindParam(':value', $value);
+                $stmt->execute();
+            }
+            
+            $message = 'Social media links saved successfully!';
+            $messageType = 'success';
+        } catch(PDOException $exception) {
+            $message = 'Error saving social media links: ' . $exception->getMessage();
+            $messageType = 'error';
+        }
+    } elseif (isset($_POST['save_office_hours'])) {
+        try {
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            $office_hours = [
+                'monday_friday_label' => $_POST['monday_friday_label'] ?? 'Monday - Friday',
+                'monday_friday_time' => $_POST['monday_friday_time'] ?? '8:00 AM - 4:00 PM',
+                'saturday_label' => $_POST['saturday_label'] ?? 'Saturday',
+                'saturday_time' => $_POST['saturday_time'] ?? '9:00 AM - 1:00 PM',
+                'sunday_label' => $_POST['sunday_label'] ?? 'Sunday',
+                'sunday_time' => $_POST['sunday_time'] ?? 'Closed'
+            ];
+            
+            foreach ($office_hours as $key => $value) {
+                $query = "INSERT INTO homepage_cms (section, content_key, content_type, content_value) VALUES ('office_hours', :key, 'text', :value) 
+                          ON DUPLICATE KEY UPDATE content_value = :value";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':key', $key);
+                $stmt->bindParam(':value', $value);
+                $stmt->execute();
+            }
+            
+            $message = 'Office hours saved successfully!';
+            $messageType = 'success';
+        } catch(PDOException $exception) {
+            $message = 'Error saving office hours: ' . $exception->getMessage();
+            $messageType = 'error';
+        }
+    } elseif (isset($_POST['save_map_url'])) {
+        try {
+            $database = new Database();
+            $db = $database->getConnection();
+
+            $map_url = $_POST['map_url'] ?? '';
+
+            // Extract URL from iframe tag if user pasted full iframe HTML
+            if (preg_match('/src=["\']([^"\']+)["\']/', $map_url, $matches)) {
+                $map_url = $matches[1];
+            }
+
+            // Debug: Log the map URL being saved
+            error_log("Saving map URL: " . $map_url);
+
+            $query = "INSERT INTO homepage_cms (section, content_key, content_type, content_value) VALUES ('contact', 'map_url', 'url', :value)
+                      ON DUPLICATE KEY UPDATE content_value = :value";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':value', $map_url);
+
+            if ($stmt->execute()) {
+                $message = 'Map URL saved successfully!';
+                $messageType = 'success';
+                error_log("Map URL saved successfully");
+            } else {
+                $message = 'Error saving map URL: Could not execute query';
+                $messageType = 'error';
+                error_log("Map URL save failed: Could not execute query");
+            }
+        } catch(PDOException $exception) {
+            $message = 'Error saving map URL: ' . $exception->getMessage();
+            $messageType = 'error';
+            error_log("Map URL save exception: " . $exception->getMessage());
+        }
+    } elseif (isset($_POST['clear_map_url'])) {
+        try {
+            $database = new Database();
+            $db = $database->getConnection();
+
+            $query = "UPDATE homepage_cms SET content_value = '' WHERE section = 'contact' AND content_key = 'map_url'";
+            $stmt = $db->prepare($query);
+            $stmt->execute();
+
+            $message = 'Map URL cleared successfully!';
+            $messageType = 'success';
+        } catch(PDOException $exception) {
+            $message = 'Error clearing map URL: ' . $exception->getMessage();
+            $messageType = 'error';
+        }
+    } elseif (isset($_POST['save_general_settings'])) {
+        try {
+            $database = new Database();
+            $db = $database->getConnection();
+            
+            $general_settings = [
+                'school_name' => $_POST['school_name'] ?? '',
+                'school_address' => $_POST['school_address'] ?? '',
+                'school_phone' => $_POST['school_phone'] ?? '',
+                'school_email' => $_POST['school_email'] ?? '',
+                'academic_year' => $_POST['academic_year'] ?? ''
+            ];
+            
+            foreach ($general_settings as $key => $value) {
+                $query = "INSERT INTO settings (setting_key, setting_value) VALUES (:key, :value) 
+                          ON DUPLICATE KEY UPDATE setting_value = :value";
+                $stmt = $db->prepare($query);
+                $stmt->bindParam(':key', $key);
+                $stmt->bindParam(':value', $value);
+                $stmt->execute();
+            }
+            
+            $message = 'General settings saved successfully!';
+            $messageType = 'success';
+        } catch(PDOException $exception) {
+            $message = 'Error saving general settings: ' . $exception->getMessage();
+            $messageType = 'error';
+        }
+    } elseif (isset($_POST['save_email_settings'])) {
         $settings = [
             'smtp_host' => $_POST['smtp_host'] ?? '',
             'smtp_port' => $_POST['smtp_port'] ?? '587',
@@ -112,6 +246,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $settings = $emailService->getSettings();
+
+// Get general settings from database
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+    
+    $query = "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('school_name', 'school_address', 'school_phone', 'school_email', 'academic_year')";
+    $stmt = $db->prepare($query);
+    $stmt->execute();
+    $general_settings_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $general_settings = [];
+    foreach ($general_settings_result as $row) {
+        $general_settings[$row['setting_key']] = $row['setting_value'];
+    }
+} catch(PDOException $exception) {
+    $general_settings = [];
+}
+
+// Set defaults if not in database
+$general_settings['school_name'] = $general_settings['school_name'] ?? 'Kidzenia Kindergarten';
+$general_settings['school_address'] = $general_settings['school_address'] ?? '123 Education Street, Learning City';
+$general_settings['school_phone'] = $general_settings['school_phone'] ?? '+91 9876543210';
+$general_settings['school_email'] = $general_settings['school_email'] ?? 'hello@kidzenia.com';
+$general_settings['academic_year'] = $general_settings['academic_year'] ?? '2024-2025';
+
+// Get CMS content for social media, office hours, and map URL
+try {
+    $database = new Database();
+    $db = $database->getConnection();
+    
+    $cms_query = "SELECT * FROM homepage_cms WHERE is_active = 1 ORDER BY section, content_key";
+    $cms_stmt = $db->prepare($cms_query);
+    $cms_stmt->execute();
+    $cms_results = $cms_stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    $cms_content = [];
+    foreach ($cms_results as $row) {
+        $cms_content[$row['section']][$row['content_key']] = $row;
+    }
+} catch(PDOException $exception) {
+    $cms_content = [];
+}
 
 // Get email templates
 $templates = $emailService->getAllTemplates();
@@ -241,7 +418,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <!-- General Settings Tab -->
                         <div class="row">
                             <div class="col-lg-8">
-                                <div class="card">
+                                <div class="card mb-4">
                                     <div class="card-header bg-primary text-white">
                                         <h5 class="mb-0"><i class="fas fa-school me-2"></i>School Information</h5>
                                     </div>
@@ -250,27 +427,175 @@ $activeTab = $_GET['tab'] ?? 'general';
                                             <div class="mb-3">
                                                 <label for="school_name" class="form-label">School Name</label>
                                                 <input type="text" class="form-control" id="school_name" name="school_name" 
-                                                       value="Kidzenia Kindergarten" readonly>
+                                                       value="<?php echo htmlspecialchars($general_settings['school_name']); ?>" required>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="school_address" class="form-label">School Address</label>
-                                                <textarea class="form-control" id="school_address" name="school_address" rows="3" readonly>123 Education Street, Learning City</textarea>
+                                                <textarea class="form-control" id="school_address" name="school_address" rows="3" required><?php echo htmlspecialchars($general_settings['school_address']); ?></textarea>
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
                                                         <label for="school_phone" class="form-label">School Phone</label>
                                                         <input type="tel" class="form-control" id="school_phone" name="school_phone" 
-                                                               value="+1234567890" readonly>
+                                                               value="<?php echo htmlspecialchars($general_settings['school_phone']); ?>" required>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="academic_year" class="form-label">Academic Year</label>
-                                                        <input type="text" class="form-control" id="academic_year" name="academic_year" 
-                                                               value="2024-2025" readonly>
+                                                        <label for="school_email" class="form-label">School Email</label>
+                                                        <input type="email" class="form-control" id="school_email" name="school_email" 
+                                                               value="<?php echo htmlspecialchars($general_settings['school_email']); ?>" required>
                                                     </div>
                                                 </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="academic_year" class="form-label">Academic Year</label>
+                                                <input type="text" class="form-control" id="academic_year" name="academic_year" 
+                                                       value="<?php echo htmlspecialchars($general_settings['academic_year']); ?>" required>
+                                            </div>
+                                            <button type="submit" name="save_general_settings" class="btn btn-primary">
+                                                <i class="fas fa-save me-2"></i>Save Settings
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header bg-info text-white">
+                                        <h5 class="mb-0"><i class="fas fa-share-alt me-2"></i>Social Media Links</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" action="">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="facebook_url" class="form-label">Facebook URL</label>
+                                                        <input type="url" class="form-control" id="facebook_url" name="facebook_url" 
+                                                               value="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value'] ?? ''); ?>" placeholder="https://facebook.com/yourpage">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="twitter_url" class="form-label">Twitter URL</label>
+                                                        <input type="url" class="form-control" id="twitter_url" name="twitter_url" 
+                                                               value="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value'] ?? ''); ?>" placeholder="https://twitter.com/yourhandle">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="instagram_url" class="form-label">Instagram URL</label>
+                                                        <input type="url" class="form-control" id="instagram_url" name="instagram_url" 
+                                                               value="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value'] ?? ''); ?>" placeholder="https://instagram.com/yourhandle">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="youtube_url" class="form-label">YouTube URL</label>
+                                                        <input type="url" class="form-control" id="youtube_url" name="youtube_url" 
+                                                               value="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value'] ?? ''); ?>" placeholder="https://youtube.com/yourchannel">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="linkedin_url" class="form-label">LinkedIn URL</label>
+                                                <input type="url" class="form-control" id="linkedin_url" name="linkedin_url" 
+                                                       value="<?php echo htmlspecialchars($cms_content['footer']['linkedin_url']['content_value'] ?? ''); ?>" placeholder="https://linkedin.com/company/yourcompany">
+                                            </div>
+                                            <button type="submit" name="save_social_media" class="btn btn-info">
+                                                <i class="fas fa-save me-2"></i>Save Social Media Links
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="card mb-4">
+                                    <div class="card-header bg-success text-white">
+                                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Office Hours</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" action="">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="monday_friday_label" class="form-label">Monday - Friday Label</label>
+                                                        <input type="text" class="form-control" id="monday_friday_label" name="monday_friday_label" 
+                                                               value="<?php echo htmlspecialchars($cms_content['office_hours']['monday_friday_label']['content_value'] ?? 'Monday - Friday'); ?>">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="monday_friday_time" class="form-label">Monday - Friday Time</label>
+                                                        <input type="text" class="form-control" id="monday_friday_time" name="monday_friday_time" 
+                                                               value="<?php echo htmlspecialchars($cms_content['office_hours']['monday_friday_time']['content_value'] ?? '8:00 AM - 4:00 PM'); ?>">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="saturday_label" class="form-label">Saturday Label</label>
+                                                        <input type="text" class="form-control" id="saturday_label" name="saturday_label" 
+                                                               value="<?php echo htmlspecialchars($cms_content['office_hours']['saturday_label']['content_value'] ?? 'Saturday'); ?>">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="saturday_time" class="form-label">Saturday Time</label>
+                                                        <input type="text" class="form-control" id="saturday_time" name="saturday_time" 
+                                                               value="<?php echo htmlspecialchars($cms_content['office_hours']['saturday_time']['content_value'] ?? '9:00 AM - 1:00 PM'); ?>">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="sunday_label" class="form-label">Sunday Label</label>
+                                                        <input type="text" class="form-control" id="sunday_label" name="sunday_label" 
+                                                               value="<?php echo htmlspecialchars($cms_content['office_hours']['sunday_label']['content_value'] ?? 'Sunday'); ?>">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mb-3">
+                                                        <label for="sunday_time" class="form-label">Sunday Time</label>
+                                                        <input type="text" class="form-control" id="sunday_time" name="sunday_time" 
+                                                               value="<?php echo htmlspecialchars($cms_content['office_hours']['sunday_time']['content_value'] ?? 'Closed'); ?>">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button type="submit" name="save_office_hours" class="btn btn-success">
+                                                <i class="fas fa-save me-2"></i>Save Office Hours
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div class="card-header bg-warning text-dark">
+                                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Map Settings</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form method="POST" action="?tab=general">
+                                            <div class="mb-3">
+                                                <label for="map_url" class="form-label">Google Maps Embed URL</label>
+                                                <input type="text" class="form-control" id="map_url" name="map_url"
+                                                       value="<?php echo htmlspecialchars($cms_content['contact']['map_url']['content_value'] ?? ''); ?>"
+                                                       placeholder="https://www.google.com/maps/embed?pb=...">
+                                                <div class="form-text">
+                                                    <strong>Important:</strong> Paste ONLY the URL (starts with https://www.google.com/maps/embed?pb=...), NOT the full iframe HTML tag.
+                                                    <br>
+                                                    The system will automatically extract the URL if you paste the full iframe.
+                                                </div>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="submit" name="save_map_url" class="btn btn-warning text-dark">
+                                                    <i class="fas fa-save me-2"></i>Save Map URL
+                                                </button>
+                                                <button type="submit" name="clear_map_url" class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash me-2"></i>Clear
+                                                </button>
                                             </div>
                                         </form>
                                     </div>
