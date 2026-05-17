@@ -305,20 +305,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 </div>
                             </div>
                             
-                            <div class="mb-4 form-check">
-                                <input type="checkbox" class="form-check-input" id="remember">
-                                <label class="form-check-label" for="remember">
-                                    Remember me
-                                </label>
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="remember">
+                                    <label class="form-check-label" for="remember">
+                                        Remember me
+                                    </label>
+                                </div>
+                                <a href="#" onclick="alert('Please contact the school administrator to reset your password')" class="text-decoration-none">Forgot Password?</a>
                             </div>
                             
                             <button type="submit" class="btn btn-login mb-4">
                                 <i class="fas fa-sign-in-alt me-2"></i>Sign In
                             </button>
                             
-                            <div class="text-center mt-4">
-                                <p class="text-muted small mb-0">Default Login: admin / admin123</p>
-                            </div>
+                            
                         </form>
                     </div>
                 </div>

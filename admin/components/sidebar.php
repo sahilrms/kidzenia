@@ -62,6 +62,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link <?php echo $currentPage == 'users.php' ? 'active' : ''; ?>" href="users.php">
+                    <i class="fas fa-users me-2"></i>Manage Users
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?php echo $currentPage == 'messages.php' ? 'active' : ''; ?>" href="messages.php">
                     <i class="fas fa-envelope me-2"></i>Messages
                     <?php if (isset($unread_notifications) && $unread_notifications > 0): ?>
