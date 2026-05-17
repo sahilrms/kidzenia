@@ -92,20 +92,11 @@ INSERT INTO `homepage_cms` (`section`, `content_key`, `content_type`, `content_v
 ('contact', 'contact_description', 'textarea', 'Ready to give your child the best start? We''d love to hear from you!', NULL),
 ('contact', 'contact_button_text', 'text', 'Contact Form', NULL),
 ('contact', 'phone_button_text', 'text', 'Call Us', NULL),
-('contact', 'phone_number', 'text', '+91 9876543210', NULL),
 ('contact', 'map_url', 'url', '', NULL),
 
 -- Footer
 ('footer', 'school_name', 'text', 'Kidzenia Kindergarten', NULL),
 ('footer', 'school_description', 'textarea', 'Creating joyful learning experiences for children through creativity, care, and innovation.', NULL),
-('footer', 'address', 'text', '123 Education Street, Learning City', NULL),
-('footer', 'phone', 'text', '+91 9876543210', NULL),
-('footer', 'email', 'text', 'hello@kidzenia.com', NULL),
-('footer', 'facebook_url', 'url', '', NULL),
-('footer', 'twitter_url', 'url', '', NULL),
-('footer', 'instagram_url', 'url', '', NULL),
-('footer', 'youtube_url', 'url', '', NULL),
-('footer', 'linkedin_url', 'url', '', NULL),
 
 -- Office Hours
 ('office_hours', 'monday_friday_label', 'text', 'Monday - Friday', NULL),

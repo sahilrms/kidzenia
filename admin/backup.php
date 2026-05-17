@@ -7,14 +7,6 @@ if (!is_logged_in() || !is_admin()) {
     redirect(SITE_URL . 'auth/login.php');
 }
 
-// Set headers for file download
-header('Content-Type: application/octet-stream');
-header('Content-Disposition: attachment; filename="kidzenia_backup_' . date('Y-m-d_H-i-s') . '.sql"');
-header('Cache-Control: no-cache, must-revalidate');
-header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
-header('Pragma: no-cache');
-header('Content-Transfer-Encoding: binary');
-
 // Turn off output buffering
 if (ob_get_level()) {
     ob_end_clean();
@@ -88,7 +80,52 @@ foreach ($tables as $table) {
 $output .= "SET FOREIGN_KEY_CHECKS = 1;\n";
 $output .= "-- Backup completed successfully\n";
 
-// Output the SQL dump
-echo $output;
+// Create ZIP file
+$zip_filename = 'kidzenia_backup_' . date('Y-m-d_H-i-s') . '.zip';
+$zip = new ZipArchive();
+$zip_path = sys_get_temp_dir() . '/' . $zip_filename;
+
+if ($zip->open($zip_path, ZipArchive::CREATE) !== TRUE) {
+    die("Cannot create ZIP file");
+}
+
+// Add SQL file to ZIP
+$zip->addFromString('database_backup.sql', $output);
+
+// Add images from uploads directory
+$uploads_dir = '../uploads';
+$image_dirs = ['gallery', 'homepage', 'students'];
+
+foreach ($image_dirs as $dir) {
+    $dir_path = $uploads_dir . '/' . $dir;
+    if (is_dir($dir_path)) {
+        $files = scandir($dir_path);
+        foreach ($files as $file) {
+            if ($file !== '.' && $file !== '..') {
+                $file_path = $dir_path . '/' . $file;
+                if (is_file($file_path)) {
+                    $zip->addFile($file_path, 'uploads/' . $dir . '/' . $file);
+                }
+            }
+        }
+    }
+}
+
+// Close ZIP
+$zip->close();
+
+// Set headers for ZIP download
+header('Content-Type: application/zip');
+header('Content-Disposition: attachment; filename="' . $zip_filename . '"');
+header('Content-Length: ' . filesize($zip_path));
+header('Cache-Control: no-cache, must-revalidate');
+header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+header('Pragma: no-cache');
+
+// Output ZIP file
+readfile($zip_path);
+
+// Delete temporary ZIP file
+unlink($zip_path);
 exit();
 ?>

@@ -69,7 +69,12 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                     <?php endif; ?>
                 </a>
             </li>
-                        <li class="nav-item">
+            <li class="nav-item">
+                <a class="nav-link <?php echo $currentPage == 'feedbacks.php' ? 'active' : ''; ?>" href="feedbacks.php">
+                    <i class="fas fa-comments me-2"></i>Feedbacks
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?php echo $currentPage == 'settings.php' ? 'active' : ''; ?>" href="settings.php">
                     <i class="fas fa-cog me-2"></i>Settings
                 </a>

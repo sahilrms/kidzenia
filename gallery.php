@@ -158,6 +158,7 @@ border-radius:15px;
         <li class="nav-item"><a class="nav-link" href="./index#gallery"><?php echo htmlspecialchars($cms_content['nav']['link_gallery']['content_value'] ?? 'Gallery'); ?></a></li>
         <li class="nav-item"><a class="nav-link" href="./index#events"><?php echo htmlspecialchars($cms_content['nav']['link_events']['content_value'] ?? 'Events'); ?></a></li>
         <li class="nav-item"><a class="nav-link" href="./index#contact"><?php echo htmlspecialchars($cms_content['nav']['link_contact']['content_value'] ?? 'Contact'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./social_media.php">Social Media</a></li>
       </ul>
 
       <a href="auth/login.php" class="btn btn-theme"><?php echo htmlspecialchars($cms_content['header']['admin_login_text']['content_value'] ?? 'Admin Login'); ?></a>
@@ -175,34 +176,31 @@ border-radius:15px;
 
 <div class="masonry">
 
-<?php foreach($gallery_images as $img): 
-$src='https://picsum.photos/500/700?random='.rand(1,999);
+<?php foreach($gallery_images as $img):
+$src = '';
+$show_image = false;
 
 if(!empty($img['image_path'])){
 if(strpos($img['image_path'],'http')===0){
 $src=$img['image_path'];
-}else{
+$show_image = true;
+}elseif(file_exists('uploads/gallery/'.$img['image_path'])){
 $src='uploads/gallery/'.$img['image_path'];
+$show_image = true;
 }
 }
 ?>
 
-<div class="card-item"
-onclick="showImage(
-'<?php echo htmlspecialchars($src); ?>',
-'<?php echo htmlspecialchars($img['title']??'Gallery'); ?>',
-'<?php echo htmlspecialchars($img['description']??''); ?>'
-)">
-
-<img src="<?php echo $src; ?>">
-
-<div class="overlay">
-<h5><?php echo htmlspecialchars($img['title']??'Gallery'); ?></h5>
+<?php if($show_image): ?>
+<div class="gallery-item" data-category="<?php echo htmlspecialchars($img['category']??'all'); ?>">
+<img src="<?php echo htmlspecialchars($src); ?>" alt="<?php echo htmlspecialchars($img['title']??'Gallery'); ?>">
+<div class="gallery-overlay">
+<h3><?php echo htmlspecialchars($img['title']??'Gallery Item'); ?></h3>
 <p><?php echo htmlspecialchars($img['description']??''); ?></p>
+<a href="<?php echo htmlspecialchars($src); ?>" class="btn-view" data-lightbox="gallery"><i class="fas fa-expand"></i></a>
 </div>
-
 </div>
-
+<?php endif; ?>
 <?php endforeach; ?>
 
 </div>
@@ -336,26 +334,34 @@ document.addEventListener(
 
 galleryData=[
 
-<?php foreach($gallery_images as $img):
+<?php foreach($gallery_images as $img): 
 
-$src='https://picsum.photos/500/700?random='.rand(1,999);
+$src='';
+$show_image=false;
 
 if(!empty($img['image_path'])){
-if(strpos($img['image_path'],'http')===0){
-$src=$img['image_path'];
-}else{
-$src='uploads/gallery/'.$img['image_path'];
-}
+
+    if(strpos($img['image_path'],'http')===0){
+        $src=$img['image_path'];
+        $show_image=true;
+    }
+    elseif(file_exists('uploads/gallery/'.$img['image_path'])){
+        $src='uploads/gallery/'.$img['image_path'];
+        $show_image=true;
+    }
+
 }
 
+if($show_image):
 ?>
 
 {
 img:'<?php echo htmlspecialchars($src); ?>',
-title:'<?php echo htmlspecialchars($img['title']??'Gallery'); ?>',
-desc:'<?php echo htmlspecialchars($img['description']??''); ?>'
+title:'<?php echo htmlspecialchars($img['title'] ?? 'Gallery'); ?>',
+desc:'<?php echo htmlspecialchars($img['description'] ?? ''); ?>'
 },
 
+<?php endif; ?>
 <?php endforeach; ?>
 
 ];
@@ -383,6 +389,8 @@ modal.show();
 }
 
 function updateModal(){
+
+if(galleryData.length===0) return;
 
 let item=galleryData[currentIndex];
 
@@ -491,6 +499,5 @@ zoomOut();
 });
 
 </script>
-
 </body>
 </html>

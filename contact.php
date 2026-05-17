@@ -1,5 +1,6 @@
 <?php
 require_once 'config/config.php';
+require_once 'config/app_settings.php';
 
 // Handle contact form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -18,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         try {
             $database = new Database();
             $db = $database->getConnection();
+            $app_settings = load_app_settings($db);
             
             // Insert contact message into database (optional - for tracking)
             $query = "INSERT INTO contact_messages (name, email, phone, subject, message, created_at) VALUES (:name, :email, :phone, :subject, :message, NOW())";
@@ -30,7 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             if ($stmt->execute()) {
                 // Send email notification to admin (in a real implementation)
-                $to = ADMIN_EMAIL;
+                $schoolEmails = app_setting_list($app_settings['school_email']);
+                $to = $schoolEmails[0] ?? ADMIN_EMAIL;
                 $email_subject = "New Contact Form Submission: " . $subject;
                 $email_body = "You have received a new message from the contact form:\n\n";
                 $email_body .= "Name: " . $name . "\n";
@@ -62,10 +65,7 @@ try {
     $database = new Database();
     $db = $database->getConnection();
     
-    $settings_query = "SELECT setting_key, setting_value FROM settings";
-    $settings_stmt = $db->prepare($settings_query);
-    $settings_stmt->execute();
-    $settings = $settings_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    $settings = load_app_settings($db);
     
     // Get CMS content for navbar
     $cms_query = "SELECT * FROM homepage_cms WHERE is_active = 1 ORDER BY section, content_key";
@@ -79,7 +79,7 @@ try {
     }
     
 } catch(PDOException $exception) {
-    $settings = [];
+    $settings = app_settings_defaults();
     $cms_content = [];
 }
 ?>
@@ -133,8 +133,12 @@ try {
         <li class="nav-item"><a class="nav-link" href="./index#about"><?php echo htmlspecialchars($cms_content['nav']['link_about']['content_value'] ?? 'About'); ?></a></li>
         <li class="nav-item"><a class="nav-link" href="./index#gallery"><?php echo htmlspecialchars($cms_content['nav']['link_gallery']['content_value'] ?? 'Gallery'); ?></a></li>
         <li class="nav-item"><a class="nav-link" href="./index#events"><?php echo htmlspecialchars($cms_content['nav']['link_events']['content_value'] ?? 'Events'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#reviews">Reviews</a></li>
+        <li class="nav-item"><a class="nav-link" href="./index#feedback">Feedback</a></li>
         <li class="nav-item"><a class="nav-link" href="./index#contact"><?php echo htmlspecialchars($cms_content['nav']['link_contact']['content_value'] ?? 'Contact'); ?></a></li>
       </ul>
+
+    
 
       <a href="auth/login.php" class="btn btn-theme"><?php echo htmlspecialchars($cms_content['header']['admin_login_text']['content_value'] ?? 'Admin Login'); ?></a>
     </div>
@@ -231,7 +235,7 @@ try {
                             </div>
                             <div>
                                 <h5 class="mb-1">Address</h5>
-                                <p class="text-muted mb-0"><?php echo $settings['school_address'] ?? '123 Education Street, Learning City, 12345'; ?></p>
+                                <p class="text-muted mb-0"><?php echo htmlspecialchars($settings['school_address']); ?></p>
                             </div>
                         </div>
                         
@@ -241,7 +245,11 @@ try {
                             </div>
                             <div>
                                 <h5 class="mb-1">Phone</h5>
-                                <p class="text-muted mb-0"><?php echo $settings['school_phone'] ?? '+1234567890'; ?></p>
+                                <?php foreach (app_setting_list($settings['school_phone']) as $phone): ?>
+                                    <p class="text-muted mb-1">
+                                        <a href="tel:<?php echo htmlspecialchars(app_phone_link($phone)); ?>" class="text-muted text-decoration-none"><?php echo htmlspecialchars($phone); ?></a>
+                                    </p>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                         
@@ -251,7 +259,11 @@ try {
                             </div>
                             <div>
                                 <h5 class="mb-1">Email</h5>
-                                <p class="text-muted mb-0"><?php echo $settings['school_email'] ?? 'info@kidzenia.com'; ?></p>
+                                <?php foreach (app_setting_list($settings['school_email']) as $email): ?>
+                                    <p class="text-muted mb-1">
+                                        <a href="mailto:<?php echo htmlspecialchars($email); ?>" class="text-muted text-decoration-none"><?php echo htmlspecialchars($email); ?></a>
+                                    </p>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                         
@@ -274,28 +286,28 @@ try {
                         </div>
                         
                         <div class="social-links">
-                            <?php if (!empty($cms_content['footer']['facebook_url']['content_value'])): ?>
-                                <a href="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value']); ?>" class="social-link" target="_blank">
+                            <?php if (!empty($settings['facebook_url'])): ?>
+                                <a href="<?php echo htmlspecialchars($settings['facebook_url']); ?>" class="social-link" target="_blank">
                                     <i class="fab fa-facebook-f"></i>
                                 </a>
                             <?php endif; ?>
-                            <?php if (!empty($cms_content['footer']['twitter_url']['content_value'])): ?>
-                                <a href="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value']); ?>" class="social-link" target="_blank">
+                            <?php if (!empty($settings['twitter_url'])): ?>
+                                <a href="<?php echo htmlspecialchars($settings['twitter_url']); ?>" class="social-link" target="_blank">
                                     <i class="fab fa-twitter"></i>
                                 </a>
                             <?php endif; ?>
-                            <?php if (!empty($cms_content['footer']['instagram_url']['content_value'])): ?>
-                                <a href="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value']); ?>" class="social-link" target="_blank">
+                            <?php if (!empty($settings['instagram_url'])): ?>
+                                <a href="<?php echo htmlspecialchars($settings['instagram_url']); ?>" class="social-link" target="_blank">
                                     <i class="fab fa-instagram"></i>
                                 </a>
                             <?php endif; ?>
-                            <?php if (!empty($cms_content['footer']['youtube_url']['content_value'])): ?>
-                                <a href="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value']); ?>" class="social-link" target="_blank">
+                            <?php if (!empty($settings['youtube_url'])): ?>
+                                <a href="<?php echo htmlspecialchars($settings['youtube_url']); ?>" class="social-link" target="_blank">
                                     <i class="fab fa-youtube"></i>
                                 </a>
                             <?php endif; ?>
-                            <?php if (!empty($cms_content['footer']['linkedin_url']['content_value'])): ?>
-                                <a href="<?php echo htmlspecialchars($cms_content['footer']['linkedin_url']['content_value']); ?>" class="social-link" target="_blank">
+                            <?php if (!empty($settings['linkedin_url'])): ?>
+                                <a href="<?php echo htmlspecialchars($settings['linkedin_url']); ?>" class="social-link" target="_blank">
                                     <i class="fab fa-linkedin-in"></i>
                                 </a>
                             <?php endif; ?>
@@ -328,17 +340,20 @@ try {
                     <h4><i class="fas fa-graduation-cap me-2"></i>Kidzenia Kindergarten</h4>
                     <p>Where learning begins with joy. We provide a nurturing environment for your child's early education and development.</p>
                     <div class="mt-3">
-                        <?php if (!empty($cms_content['footer']['facebook_url']['content_value'])): ?>
-                            <a href="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-facebook fa-lg"></i></a>
+                        <?php if (!empty($settings['facebook_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($settings['facebook_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-facebook fa-lg"></i></a>
                         <?php endif; ?>
-                        <?php if (!empty($cms_content['footer']['twitter_url']['content_value'])): ?>
-                            <a href="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-twitter fa-lg"></i></a>
+                        <?php if (!empty($settings['twitter_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($settings['twitter_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-twitter fa-lg"></i></a>
                         <?php endif; ?>
-                        <?php if (!empty($cms_content['footer']['instagram_url']['content_value'])): ?>
-                            <a href="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-instagram fa-lg"></i></a>
+                        <?php if (!empty($settings['instagram_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($settings['instagram_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-instagram fa-lg"></i></a>
                         <?php endif; ?>
-                        <?php if (!empty($cms_content['footer']['youtube_url']['content_value'])): ?>
-                            <a href="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value']); ?>" class="text-white" target="_blank"><i class="fab fa-youtube fa-lg"></i></a>
+                        <?php if (!empty($settings['youtube_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($settings['youtube_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-youtube fa-lg"></i></a>
+                        <?php endif; ?>
+                        <?php if (!empty($settings['linkedin_url'])): ?>
+                            <a href="<?php echo htmlspecialchars($settings['linkedin_url']); ?>" class="text-white" target="_blank"><i class="fab fa-linkedin fa-lg"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -354,11 +369,19 @@ try {
                 </div>
                 <div class="col-lg-3 mb-4">
                     <h5>Contact Info</h5>
-                    <p class="text-white-50">
-                        <i class="fas fa-map-marker-alt me-2"></i><?php echo $settings['school_address'] ?? '123 Education Street, Learning City'; ?><br>
-                        <i class="fas fa-phone me-2"></i><?php echo $settings['school_phone'] ?? '+1234567890'; ?><br>
-                        <i class="fas fa-envelope me-2"></i><?php echo $settings['school_email'] ?? 'info@kidzenia.com'; ?>
-                    </p>
+                    <div class="text-white-50 footer-contact-list">
+                        <span><i class="fas fa-map-marker-alt me-2"></i><?php echo htmlspecialchars($settings['school_address']); ?></span>
+                        <?php foreach (app_setting_list($settings['school_phone']) as $phone): ?>
+                            <a href="tel:<?php echo htmlspecialchars(app_phone_link($phone)); ?>" class="text-white-50">
+                                <i class="fas fa-phone me-2"></i><?php echo htmlspecialchars($phone); ?>
+                            </a>
+                        <?php endforeach; ?>
+                        <?php foreach (app_setting_list($settings['school_email']) as $email): ?>
+                            <a href="mailto:<?php echo htmlspecialchars($email); ?>" class="text-white-50">
+                                <i class="fas fa-envelope me-2"></i><?php echo htmlspecialchars($email); ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
                 <div class="col-lg-3 mb-4">
                     <h5>Location</h5>

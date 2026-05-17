@@ -74,7 +74,7 @@ try {
         
         // Show database statistics
         echo "<h3>Database Statistics:</h3>";
-        $tables = ['users', 'students', 'classes', 'attendance', 'announcements', 'notifications', 'gallery', 'events', 'messages', 'settings'];
+        $tables = ['users', 'students', 'classes', 'attendance', 'announcements', 'notifications', 'gallery', 'events', 'messages', 'feedbacks', 'settings'];
         
         foreach ($tables as $table) {
             $stmt = $conn->prepare("SELECT COUNT(*) as count FROM $table");

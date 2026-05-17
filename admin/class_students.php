@@ -236,8 +236,12 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Students - <?php echo htmlspecialchars($class_info['name'] ?? 'Class'); ?> - Kidzenia Kindergarten</title>
+    
+    <?php include 'components/favicon.php'; ?>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="components/sidebar.css">
     <style>
         :root {
             --primary-color: #667eea;
@@ -247,36 +251,6 @@ try {
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
-        }
-        
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 250px;
-            z-index: 1000;
-        }
-        
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 5px 10px;
-            transition: all 0.3s;
-        }
-        
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-        
-        .main-content {
-            margin-left: 250px;
-            padding: 20px;
         }
         
         .class-header {
@@ -367,92 +341,11 @@ try {
             transform: translateX(5px);
         }
         
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            
-            .sidebar.show {
-                transform: translateX(0);
-            }
-            
-            .main-content {
-                margin-left: 0;
-            }
-        }
     </style>
 </head>
 <body>
     <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="p-3">
-            <h4 class="text-center mb-4">
-                <i class="fas fa-graduation-cap me-2"></i>Kidzenia
-            </h4>
-            <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="index.php">
-                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="students.php">
-                        <i class="fas fa-user-graduate me-2"></i>Students
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="teachers.php">
-                        <i class="fas fa-chalkboard-teacher me-2"></i>Teachers
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="classes.php">
-                        <i class="fas fa-school me-2"></i>Classes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="attendance.php">
-                        <i class="fas fa-calendar-check me-2"></i>Attendance
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="announcements.php">
-                        <i class="fas fa-bullhorn me-2"></i>Announcements
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="events.php">
-                        <i class="fas fa-calendar-alt me-2"></i>Events
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="gallery.php">
-                        <i class="fas fa-images me-2"></i>Gallery
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="messages.php">
-                        <i class="fas fa-envelope me-2"></i>Messages
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="settings.php">
-                        <i class="fas fa-cog me-2"></i>Settings
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../readme.php" target="_blank">
-                        <i class="fas fa-info-circle me-2"></i>Features Guide
-                    </a>
-                </li>
-                <li class="nav-item mt-4">
-                    <a class="nav-link text-danger" href="../auth/logout.php">
-                        <i class="fas fa-sign-out-alt me-2"></i>Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+    <?php include 'components/sidebar.php'; ?>
 
     <!-- Main Content -->
     <div class="main-content">

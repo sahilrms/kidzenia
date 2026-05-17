@@ -148,6 +148,21 @@ CREATE TABLE messages (
     FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Feedbacks Table
+CREATE TABLE feedbacks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    rating INT DEFAULT 5,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_feedbacks_status (status),
+    INDEX idx_feedbacks_created_at (created_at)
+);
+
 -- Settings Table
 CREATE TABLE settings (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -168,6 +183,11 @@ INSERT INTO settings (setting_key, setting_value, description) VALUES
 ('school_phone', '+1234567890', 'School phone number'),
 ('school_email', 'info@kidzenia.com', 'School email address'),
 ('academic_year', '2024-2025', 'Current academic year'),
+('facebook_url', '', 'Facebook page URL'),
+('twitter_url', '', 'Twitter/X profile URL'),
+('instagram_url', '', 'Instagram profile URL'),
+('youtube_url', '', 'YouTube channel URL'),
+('linkedin_url', '', 'LinkedIn page URL'),
 ('school_timing', '9:00 AM - 12:30 PM', 'School timing'),
 ('max_students_per_class', '30', 'Maximum students per class');
 

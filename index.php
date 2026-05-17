@@ -1,35 +1,13 @@
 <?php
 require_once 'config/config.php';
+require_once 'config/app_settings.php';
 
 // Get general settings from database
 function get_general_settings($db) {
     try {
-        $query = "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('school_name', 'school_address', 'school_phone', 'school_email', 'academic_year')";
-        $stmt = $db->prepare($query);
-        $stmt->execute();
-        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        $settings = [];
-        foreach ($result as $row) {
-            $settings[$row['setting_key']] = $row['setting_value'];
-        }
-        
-        // Set defaults if not in database
-        $settings['school_name'] = $settings['school_name'] ?? 'Kidzenia Kindergarten';
-        $settings['school_address'] = $settings['school_address'] ?? '123 Education Street, Learning City';
-        $settings['school_phone'] = $settings['school_phone'] ?? '+91 9876543210';
-        $settings['school_email'] = $settings['school_email'] ?? 'hello@kidzenia.com';
-        $settings['academic_year'] = $settings['academic_year'] ?? '2024-2025';
-        
-        return $settings;
+        return load_app_settings($db);
     } catch(PDOException $exception) {
-        return [
-            'school_name' => 'Kidzenia Kindergarten',
-            'school_address' => '123 Education Street, Learning City',
-            'school_phone' => '+91 9876543210',
-            'school_email' => 'hello@kidzenia.com',
-            'academic_year' => '2024-2025'
-        ];
+        return app_settings_defaults();
     }
 }
 
@@ -171,6 +149,18 @@ if (empty($events)) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="assets/style.css">
   
+  <?php
+  // Favicon from CMS
+  $favicon = $cms_content['header']['favicon']['image_path'] ?? $cms_content['header']['favicon']['content_value'] ?? '';
+  if (!empty($favicon)) {
+      if (strpos($favicon, 'http') === 0) {
+          $favicon_src = $favicon;
+      } else {
+          $favicon_src = 'uploads/homepage/' . $favicon;
+      }
+      echo '<link rel="icon" type="image/x-icon" href="' . htmlspecialchars($favicon_src) . '">';
+  }
+  ?>
   
 </head>
 <body>
@@ -210,8 +200,17 @@ if (empty($events)) {
         <li class="nav-item"><a class="nav-link" href="#about"><?php echo htmlspecialchars($cms_content['nav']['link_about']['content_value'] ?? 'About'); ?></a></li>
         <li class="nav-item"><a class="nav-link" href="#gallery"><?php echo htmlspecialchars($cms_content['nav']['link_gallery']['content_value'] ?? 'Gallery'); ?></a></li>
         <li class="nav-item"><a class="nav-link" href="#events"><?php echo htmlspecialchars($cms_content['nav']['link_events']['content_value'] ?? 'Events'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="#reviews">Reviews</a></li>
+        <li class="nav-item"><a class="nav-link" href="./social_media">Social Media</a></li>
         <li class="nav-item"><a class="nav-link" href="#contact"><?php echo htmlspecialchars($cms_content['nav']['link_contact']['content_value'] ?? 'Contact'); ?></a></li>
+        <li class="nav-item"><a class="nav-link" href="#feedback">Feedback</a></li>
       </ul>
+
+     <div class="header-contact">
+    
+  
+
+</div>
 
       <a href="auth/login.php" class="btn btn-theme"><?php echo htmlspecialchars($cms_content['header']['admin_login_text']['content_value'] ?? 'Admin Login'); ?></a>
     </div>
@@ -272,12 +271,12 @@ if (empty($events)) {
           <img src="<?php echo htmlspecialchars($hero_image_src); ?>" alt="Kids">
 
           <div class="floating-card card-1">
-            <h5><?php echo htmlspecialchars($cms_content['hero']['floating_card_1_icon']['content_value'] ?? '🎨'); ?> <?php echo htmlspecialchars($cms_content['hero']['floating_card_1_title']['content_value'] ?? 'Creative Learning'); ?></h5>
+            <h5><?php echo htmlspecialchars($cms_content['hero']['floating_card_1_icon']['content_value'] ?? 'Art'); ?> <?php echo htmlspecialchars($cms_content['hero']['floating_card_1_title']['content_value'] ?? 'Creative Learning'); ?></h5>
             <p><?php echo htmlspecialchars($cms_content['hero']['floating_card_1_description']['content_value'] ?? 'Interactive & playful education'); ?></p>
           </div>
 
           <div class="floating-card card-2">
-            <h5><?php echo htmlspecialchars($cms_content['hero']['floating_card_2_icon']['content_value'] ?? '🚌'); ?> <?php echo htmlspecialchars($cms_content['hero']['floating_card_2_title']['content_value'] ?? 'Smart Transport'); ?></h5>
+            <h5><?php echo htmlspecialchars($cms_content['hero']['floating_card_2_icon']['content_value'] ?? 'Bus'); ?> <?php echo htmlspecialchars($cms_content['hero']['floating_card_2_title']['content_value'] ?? 'Smart Transport'); ?></h5>
             <p><?php echo htmlspecialchars($cms_content['hero']['floating_card_2_description']['content_value'] ?? 'Live GPS tracking for parents'); ?></p>
           </div>
         </div>
@@ -642,9 +641,122 @@ if (empty($events)) {
     text-align:center;
     width:fit-content;
     ">
-        View Full Gallery →
+        View Full Gallery &rarr;
     </a>
 </section>
+
+<section class="bg-white" id="reviews">
+  <div class="container">
+    <div class="section-title">
+      <span>Testimonials</span>
+      <h2>What Parents Say</h2>
+    </div>
+
+    <div class="reviews-carousel-wrapper">
+      <div class="reviews-carousel" id="reviewsCarousel">
+        <div class="reviews-track" id="reviewsTrack">
+          <div class="col-lg-4 col-md-6">
+            <div class="review-card">
+              <div class="review-icon"><i class="fas fa-quote-left"></i></div>
+              <p>"Kidzenia has been a wonderful experience for our child. The teachers are caring and the curriculum is excellent!"</p>
+              <div class="review-name">- Sarah Johnson</div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="review-card">
+              <div class="review-icon orange"><i class="fas fa-quote-left"></i></div>
+              <p>"The safe and nurturing environment gives us peace of mind. Our daughter loves going to school every day!"</p>
+              <div class="review-name">- Michael Chen</div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="review-card">
+              <div class="review-icon sky"><i class="fas fa-quote-left"></i></div>
+              <p>"Best decision we made for our toddler. The play-based learning approach is perfect for early childhood development."</p>
+              <div class="review-name">- Emily Rodriguez</div>
+              <div class="review-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="carousel-nav carousel-prev" id="carouselPrev">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="carousel-nav carousel-next" id="carouselNext">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      <div class="carousel-dots" id="carouselDots"></div>
+    </div>
+  </div>
+</section>
+
+<section id="feedback">
+  <div class="container">
+    <div class="section-title">
+      <span>Your Voice</span>
+      <h2>Share Your Feedback</h2>
+    </div>
+
+    <div class="text-center">
+      <p class="lead mb-4">We value your opinion! Share your experience with us.</p>
+      <button type="button" class="btn btn-theme btn-lg" data-bs-toggle="modal" data-bs-target="#feedbackModal">
+        <i class="fas fa-comment-dots me-2"></i>Give Feedback
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="feedbackModalLabel">Share Your Feedback</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="feedbackForm">
+          <div class="mb-3">
+            <label class="form-label">Your Name</label>
+            <input type="text" name="name" class="form-control" required placeholder="Enter your name">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" required placeholder="Enter your email">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Subject</label>
+            <input type="text" name="subject" class="form-control" required placeholder="Feedback subject">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Rating</label>
+            <select name="rating" class="form-select" required>
+              <option value="">Select a rating</option>
+              <option value="5">5 Stars - Excellent</option>
+              <option value="4">4 Stars - Very Good</option>
+              <option value="3">3 Stars - Good</option>
+              <option value="2">2 Stars - Fair</option>
+              <option value="1">1 Star - Poor</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Your Feedback</label>
+            <textarea name="message" class="form-control" rows="5" required placeholder="Share your thoughts with us"></textarea>
+          </div>
+          <button type="submit" class="btn btn-theme w-100" id="feedbackSubmitBtn">Submit Feedback</button>
+        </form>
+
+        <div id="feedbackSuccess" class="feedback-success text-center" style="display: none;">
+          <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+          <h4>Thank You!</h4>
+          <p class="mb-0">Your feedback has been submitted and will appear after admin approval.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <section id="contact">
   <div class="container">
@@ -663,7 +775,8 @@ if (empty($events)) {
             <a href="contact.php" class="btn btn-theme btn-lg">
               <i class="fas fa-envelope me-2"></i>Contact Form
             </a>
-            <a href="tel:<?php echo htmlspecialchars($general_settings['school_phone']); ?>" class="btn btn-outline-primary btn-lg">
+            <?php $primaryPhone = app_setting_list($general_settings['school_phone'])[0] ?? ''; ?>
+            <a href="tel:<?php echo htmlspecialchars(app_phone_link($primaryPhone)); ?>" class="btn btn-outline-primary btn-lg">
               <i class="fas fa-phone me-2"></i>Call Us
             </a>
           </div>
@@ -683,20 +796,20 @@ if (empty($events)) {
         </p>
 
         <div class="social-icons mt-4">
-          <?php if (!empty($cms_content['footer']['facebook_url']['content_value'])): ?>
-            <a href="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value']); ?>" target="_blank"><i class="fab fa-facebook-f"></i></a>
+          <?php if (!empty($general_settings['facebook_url'])): ?>
+            <a href="<?php echo htmlspecialchars($general_settings['facebook_url']); ?>" target="_blank"><i class="fab fa-facebook-f"></i></a>
           <?php endif; ?>
-          <?php if (!empty($cms_content['footer']['twitter_url']['content_value'])): ?>
-            <a href="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value']); ?>" target="_blank"><i class="fab fa-twitter"></i></a>
+          <?php if (!empty($general_settings['twitter_url'])): ?>
+            <a href="<?php echo htmlspecialchars($general_settings['twitter_url']); ?>" target="_blank"><i class="fab fa-twitter"></i></a>
           <?php endif; ?>
-          <?php if (!empty($cms_content['footer']['instagram_url']['content_value'])): ?>
-            <a href="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value']); ?>" target="_blank"><i class="fab fa-instagram"></i></a>
+          <?php if (!empty($general_settings['instagram_url'])): ?>
+            <a href="<?php echo htmlspecialchars($general_settings['instagram_url']); ?>" target="_blank"><i class="fab fa-instagram"></i></a>
           <?php endif; ?>
-          <?php if (!empty($cms_content['footer']['youtube_url']['content_value'])): ?>
-            <a href="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value']); ?>" target="_blank"><i class="fab fa-youtube"></i></a>
+          <?php if (!empty($general_settings['youtube_url'])): ?>
+            <a href="<?php echo htmlspecialchars($general_settings['youtube_url']); ?>" target="_blank"><i class="fab fa-youtube"></i></a>
           <?php endif; ?>
-          <?php if (!empty($cms_content['footer']['linkedin_url']['content_value'])): ?>
-            <a href="<?php echo htmlspecialchars($cms_content['footer']['linkedin_url']['content_value']); ?>" target="_blank"><i class="fab fa-linkedin-in"></i></a>
+          <?php if (!empty($general_settings['linkedin_url'])): ?>
+            <a href="<?php echo htmlspecialchars($general_settings['linkedin_url']); ?>" target="_blank"><i class="fab fa-linkedin-in"></i></a>
           <?php endif; ?>
         </div>
       </div>
@@ -719,9 +832,19 @@ if (empty($events)) {
 
       <div class="col-lg-3">
         <h4>Contact</h4>
-        <p><i class="fa-solid fa-location-dot me-2"></i> <?php echo htmlspecialchars($general_settings['school_address']); ?></p>
-        <p><i class="fa-solid fa-phone me-2"></i> <?php echo htmlspecialchars($general_settings['school_phone']); ?></p>
-        <p><i class="fa-solid fa-envelope me-2"></i> <?php echo htmlspecialchars($general_settings['school_email']); ?></p>
+        <div class="footer-contact-list">
+          <span><i class="fa-solid fa-location-dot me-2"></i><?php echo htmlspecialchars($general_settings['school_address']); ?></span>
+          <?php foreach (app_setting_list($general_settings['school_phone']) as $phone): ?>
+            <a href="tel:<?php echo htmlspecialchars(app_phone_link($phone)); ?>">
+              <i class="fa-solid fa-phone me-2"></i><?php echo htmlspecialchars($phone); ?>
+            </a>
+          <?php endforeach; ?>
+          <?php foreach (app_setting_list($general_settings['school_email']) as $email): ?>
+            <a href="mailto:<?php echo htmlspecialchars($email); ?>">
+              <i class="fa-solid fa-envelope me-2"></i><?php echo htmlspecialchars($email); ?>
+            </a>
+          <?php endforeach; ?>
+        </div>
         <?php if (!empty($cms_content['contact']['map_url']['content_value'])): ?>
         <div class="mt-3" style="height: 150px; border-radius: 8px; overflow: hidden;">
           <iframe src="<?php echo htmlspecialchars($cms_content['contact']['map_url']['content_value']); ?>" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
@@ -731,7 +854,7 @@ if (empty($events)) {
     </div>
 
     <div class="footer-bottom">
-      <p>© <?php echo date('Y'); ?> Kidzenia Kindergarten. All Rights Reserved.</p>
+      <p>&copy; <?php echo date('Y'); ?> Kidzenia Kindergarten. All Rights Reserved.</p>
     </div>
   </div>
 </footer>
@@ -1072,6 +1195,207 @@ END:VEVENT`;
       navbar.style.padding = '18px 0';
       navbar.style.background = 'rgba(255,255,255,0.85)';
     }
+  });
+
+  const feedbackForm = document.getElementById('feedbackForm');
+  const feedbackSubmitBtn = document.getElementById('feedbackSubmitBtn');
+  const feedbackModal = new bootstrap.Modal(document.getElementById('feedbackModal'));
+
+  if (feedbackForm) {
+    feedbackForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const formData = new FormData(feedbackForm);
+      formData.append('submit_feedback', 'true');
+      feedbackSubmitBtn.disabled = true;
+      feedbackSubmitBtn.textContent = 'Submitting...';
+
+      fetch('submit_feedback.php', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) {
+            throw new Error(data.message || 'Unable to submit feedback.');
+          }
+
+          feedbackForm.style.display = 'none';
+          document.getElementById('feedbackSuccess').style.display = 'block';
+
+          setTimeout(() => {
+            feedbackModal.hide();
+            feedbackForm.reset();
+            feedbackForm.style.display = 'block';
+            document.getElementById('feedbackSuccess').style.display = 'none';
+          }, 2000);
+        })
+        .catch(error => {
+          alert(error.message || 'Error submitting feedback. Please try again.');
+        })
+        .finally(() => {
+          feedbackSubmitBtn.disabled = false;
+          feedbackSubmitBtn.textContent = 'Submit Feedback';
+        });
+    });
+  }
+
+  let reviewCarouselIndex = 0;
+  let reviewCarouselTimer = null;
+
+  function getVisibleReviewCount() {
+    return 1;
+  }
+
+  function updateReviewCarousel() {
+    const reviewsTrack = document.getElementById('reviewsTrack');
+    const items = reviewsTrack ? Array.from(reviewsTrack.children) : [];
+    if (!reviewsTrack || !items.length) {
+      return;
+    }
+
+    const visibleCount = getVisibleReviewCount();
+    const maxIndex = Math.max(0, items.length - visibleCount);
+    reviewCarouselIndex = Math.min(reviewCarouselIndex, maxIndex);
+
+    const gap = parseFloat(window.getComputedStyle(reviewsTrack).gap) || 0;
+    const slideWidth = items[0].getBoundingClientRect().width + gap;
+    reviewsTrack.style.transform = `translateX(-${reviewCarouselIndex * slideWidth}px)`;
+
+    document.querySelectorAll('#carouselDots .carousel-dot').forEach((dot, index) => {
+      dot.classList.toggle('active', index === reviewCarouselIndex);
+    });
+  }
+
+  function buildReviewDots(totalItems) {
+    const dots = document.getElementById('carouselDots');
+    if (!dots) {
+      return;
+    }
+
+    const visibleCount = getVisibleReviewCount();
+    const dotCount = Math.max(1, totalItems - visibleCount + 1);
+    dots.innerHTML = '';
+
+    for (let index = 0; index < dotCount; index++) {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'carousel-dot';
+      dot.setAttribute('aria-label', `Show review ${index + 1}`);
+      dot.addEventListener('click', () => {
+        reviewCarouselIndex = index;
+        updateReviewCarousel();
+        startReviewCarousel();
+      });
+      dots.appendChild(dot);
+    }
+  }
+
+  function moveReviewCarousel(direction) {
+    const reviewsTrack = document.getElementById('reviewsTrack');
+    const totalItems = reviewsTrack ? reviewsTrack.children.length : 0;
+    const visibleCount = getVisibleReviewCount();
+    const maxIndex = Math.max(0, totalItems - visibleCount);
+
+    if (!maxIndex) {
+      reviewCarouselIndex = 0;
+    } else {
+      reviewCarouselIndex += direction;
+      if (reviewCarouselIndex > maxIndex) {
+        reviewCarouselIndex = 0;
+      } else if (reviewCarouselIndex < 0) {
+        reviewCarouselIndex = maxIndex;
+      }
+    }
+
+    updateReviewCarousel();
+  }
+
+  function startReviewCarousel() {
+    clearInterval(reviewCarouselTimer);
+    reviewCarouselTimer = setInterval(() => {
+      moveReviewCarousel(1);
+    }, 5000);
+  }
+
+  function initReviewCarousel() {
+    const reviewsTrack = document.getElementById('reviewsTrack');
+    if (!reviewsTrack) {
+      return;
+    }
+
+    buildReviewDots(reviewsTrack.children.length);
+    updateReviewCarousel();
+    startReviewCarousel();
+
+    document.getElementById('carouselPrev')?.addEventListener('click', () => {
+      moveReviewCarousel(-1);
+      startReviewCarousel();
+    });
+
+    document.getElementById('carouselNext')?.addEventListener('click', () => {
+      moveReviewCarousel(1);
+      startReviewCarousel();
+    });
+  }
+
+  function renderReviews(reviews) {
+    const reviewsTrack = document.getElementById('reviewsTrack');
+    if (!reviewsTrack || !reviews.length) {
+      initReviewCarousel();
+      return;
+    }
+
+    const iconClasses = ['', 'orange', 'sky'];
+    reviewsTrack.innerHTML = '';
+
+    reviews.forEach((review, index) => {
+      const rating = Math.max(1, Math.min(5, parseInt(review.rating, 10) || 5));
+      const column = document.createElement('div');
+      column.className = 'col-lg-4 col-md-6';
+
+      const card = document.createElement('div');
+      card.className = 'review-card';
+
+      const icon = document.createElement('div');
+      icon.className = `review-icon ${iconClasses[index % iconClasses.length]}`.trim();
+      icon.innerHTML = '<i class="fas fa-quote-left"></i>';
+
+      const message = document.createElement('p');
+      message.textContent = `"${review.message || ''}"`;
+
+      const name = document.createElement('div');
+      name.className = 'review-name';
+      name.textContent = `- ${review.name || 'Parent'}`;
+
+      const stars = document.createElement('div');
+      stars.className = 'review-stars';
+      stars.textContent = '\u2605'.repeat(rating) + '\u2606'.repeat(5 - rating);
+
+      card.append(icon, message, name, stars);
+      column.appendChild(card);
+      reviewsTrack.appendChild(column);
+    });
+
+    reviewCarouselIndex = 0;
+    initReviewCarousel();
+  }
+
+  fetch('get_reviews.php')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && Array.isArray(data.reviews)) {
+        renderReviews(data.reviews);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading reviews:', error);
+      initReviewCarousel();
+    });
+
+  window.addEventListener('resize', () => {
+    buildReviewDots(document.getElementById('reviewsTrack')?.children.length || 0);
+    updateReviewCarousel();
   });
 
   // Smooth scrolling for anchor links

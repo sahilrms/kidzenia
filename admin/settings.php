@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/EmailService.php';
 require_once '../config/functions.php';
+require_once '../config/app_settings.php';
 
 // Check if user is logged in and is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
@@ -27,15 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'youtube_url' => $_POST['youtube_url'] ?? '',
                 'linkedin_url' => $_POST['linkedin_url'] ?? ''
             ];
-            
-            foreach ($social_media as $key => $value) {
-                $query = "INSERT INTO homepage_cms (section, content_key, content_type, content_value) VALUES ('footer', :key, 'url', :value) 
-                          ON DUPLICATE KEY UPDATE content_value = :value";
-                $stmt = $db->prepare($query);
-                $stmt->bindParam(':key', $key);
-                $stmt->bindParam(':value', $value);
-                $stmt->execute();
-            }
+
+            save_app_settings($db, $social_media);
             
             $message = 'Social media links saved successfully!';
             $messageType = 'success';
@@ -133,18 +127,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'school_email' => $_POST['school_email'] ?? '',
                 'academic_year' => $_POST['academic_year'] ?? ''
             ];
-            
-            foreach ($general_settings as $key => $value) {
-                $query = "INSERT INTO settings (setting_key, setting_value) VALUES (:key, :value) 
-                          ON DUPLICATE KEY UPDATE setting_value = :value";
-                $stmt = $db->prepare($query);
-                $stmt->bindParam(':key', $key);
-                $stmt->bindParam(':value', $value);
-                $stmt->execute();
+
+            $emailErrors = [];
+            foreach (app_setting_list($general_settings['school_email']) as $emailAddress) {
+                if (!filter_var($emailAddress, FILTER_VALIDATE_EMAIL)) {
+                    $emailErrors[] = $emailAddress;
+                }
             }
-            
-            $message = 'General settings saved successfully!';
-            $messageType = 'success';
+
+            if ($emailErrors) {
+                $message = 'Invalid email address: ' . implode(', ', $emailErrors);
+                $messageType = 'error';
+            } else {
+                save_app_settings($db, $general_settings);
+
+                $message = 'General settings saved successfully!';
+                $messageType = 'success';
+            }
         } catch(PDOException $exception) {
             $message = 'Error saving general settings: ' . $exception->getMessage();
             $messageType = 'error';
@@ -252,25 +251,13 @@ try {
     $database = new Database();
     $db = $database->getConnection();
     
-    $query = "SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('school_name', 'school_address', 'school_phone', 'school_email', 'academic_year')";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $general_settings_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    $general_settings = [];
-    foreach ($general_settings_result as $row) {
-        $general_settings[$row['setting_key']] = $row['setting_value'];
-    }
+    $general_settings = load_app_settings($db);
 } catch(PDOException $exception) {
-    $general_settings = [];
+    $general_settings = app_settings_defaults();
 }
 
 // Set defaults if not in database
-$general_settings['school_name'] = $general_settings['school_name'] ?? 'Kidzenia Kindergarten';
-$general_settings['school_address'] = $general_settings['school_address'] ?? '123 Education Street, Learning City';
-$general_settings['school_phone'] = $general_settings['school_phone'] ?? '+91 9876543210';
-$general_settings['school_email'] = $general_settings['school_email'] ?? 'hello@kidzenia.com';
-$general_settings['academic_year'] = $general_settings['academic_year'] ?? '2024-2025';
+$general_settings = array_merge(app_settings_defaults(), $general_settings);
 
 // Get CMS content for social media, office hours, and map URL
 try {
@@ -302,6 +289,9 @@ $activeTab = $_GET['tab'] ?? 'general';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Kidzenia Admin</title>
+    
+    <?php include 'components/favicon.php'; ?>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -436,16 +426,16 @@ $activeTab = $_GET['tab'] ?? 'general';
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="school_phone" class="form-label">School Phone</label>
-                                                        <input type="tel" class="form-control" id="school_phone" name="school_phone" 
-                                                               value="<?php echo htmlspecialchars($general_settings['school_phone']); ?>" required>
+                                                        <label for="school_phone" class="form-label">School Phone Numbers</label>
+                                                        <textarea class="form-control" id="school_phone" name="school_phone" rows="3" required><?php echo htmlspecialchars($general_settings['school_phone']); ?></textarea>
+                                                        <small class="text-muted">Enter one phone number per line.</small>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="school_email" class="form-label">School Email</label>
-                                                        <input type="email" class="form-control" id="school_email" name="school_email" 
-                                                               value="<?php echo htmlspecialchars($general_settings['school_email']); ?>" required>
+                                                        <label for="school_email" class="form-label">School Email Addresses</label>
+                                                        <textarea class="form-control" id="school_email" name="school_email" rows="3" required><?php echo htmlspecialchars($general_settings['school_email']); ?></textarea>
+                                                        <small class="text-muted">Enter one email address per line.</small>
                                                     </div>
                                                 </div>
                                             </div>
@@ -470,39 +460,39 @@ $activeTab = $_GET['tab'] ?? 'general';
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="facebook_url" class="form-label">Facebook URL</label>
-                                                        <input type="url" class="form-control" id="facebook_url" name="facebook_url" 
-                                                               value="<?php echo htmlspecialchars($cms_content['footer']['facebook_url']['content_value'] ?? ''); ?>" placeholder="https://facebook.com/yourpage">
+                                                       <label for="facebook_url" class="form-label">Facebook URL</label>
+                                                       <input type="url" class="form-control" id="facebook_url" name="facebook_url" 
+                                                               value="<?php echo htmlspecialchars($general_settings['facebook_url'] ?? ''); ?>" placeholder="https://facebook.com/yourpage">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="twitter_url" class="form-label">Twitter URL</label>
-                                                        <input type="url" class="form-control" id="twitter_url" name="twitter_url" 
-                                                               value="<?php echo htmlspecialchars($cms_content['footer']['twitter_url']['content_value'] ?? ''); ?>" placeholder="https://twitter.com/yourhandle">
+                                                       <label for="twitter_url" class="form-label">Twitter URL</label>
+                                                       <input type="url" class="form-control" id="twitter_url" name="twitter_url" 
+                                                               value="<?php echo htmlspecialchars($general_settings['twitter_url'] ?? ''); ?>" placeholder="https://twitter.com/yourhandle">
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="instagram_url" class="form-label">Instagram URL</label>
-                                                        <input type="url" class="form-control" id="instagram_url" name="instagram_url" 
-                                                               value="<?php echo htmlspecialchars($cms_content['footer']['instagram_url']['content_value'] ?? ''); ?>" placeholder="https://instagram.com/yourhandle">
+                                                       <label for="instagram_url" class="form-label">Instagram URL</label>
+                                                       <input type="url" class="form-control" id="instagram_url" name="instagram_url" 
+                                                               value="<?php echo htmlspecialchars($general_settings['instagram_url'] ?? ''); ?>" placeholder="https://instagram.com/yourhandle">
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="mb-3">
-                                                        <label for="youtube_url" class="form-label">YouTube URL</label>
-                                                        <input type="url" class="form-control" id="youtube_url" name="youtube_url" 
-                                                               value="<?php echo htmlspecialchars($cms_content['footer']['youtube_url']['content_value'] ?? ''); ?>" placeholder="https://youtube.com/yourchannel">
+                                                       <label for="youtube_url" class="form-label">YouTube URL</label>
+                                                       <input type="url" class="form-control" id="youtube_url" name="youtube_url" 
+                                                               value="<?php echo htmlspecialchars($general_settings['youtube_url'] ?? ''); ?>" placeholder="https://youtube.com/yourchannel">
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="linkedin_url" class="form-label">LinkedIn URL</label>
-                                                <input type="url" class="form-control" id="linkedin_url" name="linkedin_url" 
-                                                       value="<?php echo htmlspecialchars($cms_content['footer']['linkedin_url']['content_value'] ?? ''); ?>" placeholder="https://linkedin.com/company/yourcompany">
+                                               <label for="linkedin_url" class="form-label">LinkedIn URL</label>
+                                               <input type="url" class="form-control" id="linkedin_url" name="linkedin_url" 
+                                                       value="<?php echo htmlspecialchars($general_settings['linkedin_url'] ?? ''); ?>" placeholder="https://linkedin.com/company/yourcompany">
                                             </div>
                                             <button type="submit" name="save_social_media" class="btn btn-info">
                                                 <i class="fas fa-save me-2"></i>Save Social Media Links
