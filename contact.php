@@ -333,70 +333,75 @@ try {
     </section>
 
     <!-- Footer -->
-    <footer class="bg-dark text-white py-5">
+    <footer class="footer">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-3 mb-4">
-                    <h4><i class="fas fa-graduation-cap me-2"></i>Kidzenia Kindergarten</h4>
-                    <p>Where learning begins with joy. We provide a nurturing environment for your child's early education and development.</p>
-                    <div class="mt-3">
+            <div class="row g-5">
+                <div class="col-lg-4">
+                    <h4>Kidzenia PreSchool</h4>
+                    <p>
+                        Creating joyful learning experiences for children through creativity, care, and innovation.
+                    </p>
+
+                    <div class="social-icons mt-4">
                         <?php if (!empty($settings['facebook_url'])): ?>
-                            <a href="<?php echo htmlspecialchars($settings['facebook_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-facebook fa-lg"></i></a>
+                            <a href="<?php echo htmlspecialchars($settings['facebook_url']); ?>" target="_blank"><i class="fab fa-facebook-f"></i></a>
                         <?php endif; ?>
                         <?php if (!empty($settings['twitter_url'])): ?>
-                            <a href="<?php echo htmlspecialchars($settings['twitter_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-twitter fa-lg"></i></a>
+                            <a href="<?php echo htmlspecialchars($settings['twitter_url']); ?>" target="_blank"><i class="fab fa-twitter"></i></a>
                         <?php endif; ?>
                         <?php if (!empty($settings['instagram_url'])): ?>
-                            <a href="<?php echo htmlspecialchars($settings['instagram_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-instagram fa-lg"></i></a>
+                            <a href="<?php echo htmlspecialchars($settings['instagram_url']); ?>" target="_blank"><i class="fab fa-instagram"></i></a>
                         <?php endif; ?>
                         <?php if (!empty($settings['youtube_url'])): ?>
-                            <a href="<?php echo htmlspecialchars($settings['youtube_url']); ?>" class="text-white me-3" target="_blank"><i class="fab fa-youtube fa-lg"></i></a>
+                            <a href="<?php echo htmlspecialchars($settings['youtube_url']); ?>" target="_blank"><i class="fab fa-youtube"></i></a>
                         <?php endif; ?>
                         <?php if (!empty($settings['linkedin_url'])): ?>
-                            <a href="<?php echo htmlspecialchars($settings['linkedin_url']); ?>" class="text-white" target="_blank"><i class="fab fa-linkedin fa-lg"></i></a>
+                            <a href="<?php echo htmlspecialchars($settings['linkedin_url']); ?>" target="_blank"><i class="fab fa-linkedin-in"></i></a>
                         <?php endif; ?>
                     </div>
                 </div>
-                <div class="col-lg-3 mb-4">
-                    <h5>Quick Links</h5>
-                    <ul class="list-unstyled">
-                        <li class="mb-2"><a href="index.php#about" class="text-white-50">About Us</a></li>
-                        <li class="mb-2"><a href="index.php#programs" class="text-white-50">Programs</a></li>
-                        <li class="mb-2"><a href="index.php#gallery" class="text-white-50">Gallery</a></li>
-                        <li class="mb-2"><a href="index.php#events" class="text-white-50">Events</a></li>
-                        <li class="mb-2"><a href="contact.php" class="text-white-50">Contact</a></li>
-                    </ul>
+
+                <div class="col-lg-2 col-md-6">
+                    <h4>Quick Links</h4>
+                    <a href="index.php#about">About Us</a>
+                    <a href="index.php#programs">Programs</a>
+                    <a href="index.php#gallery">Gallery</a>
+                    <a href="auth/login.php">Admin Login</a>
                 </div>
-                <div class="col-lg-3 mb-4">
-                    <h5>Contact Info</h5>
-                    <div class="text-white-50 footer-contact-list">
-                        <span><i class="fas fa-map-marker-alt me-2"></i><?php echo htmlspecialchars($settings['school_address']); ?></span>
+
+                <div class="col-lg-3 col-md-6">
+                    <h4>Programs</h4>
+                    <a href="index.php#programs">Toddler Program</a>
+                    <a href="index.php#programs">Nursery</a>
+                    <a href="index.php#programs">Kindergarten</a>
+                    <a href="index.php#programs">Day Care</a>
+                </div>
+
+                <div class="col-lg-3">
+                    <h4>Contact</h4>
+                    <div class="footer-contact-list">
+                        <span><i class="fa-solid fa-location-dot me-2"></i><?php echo htmlspecialchars($settings['school_address']); ?></span>
                         <?php foreach (app_setting_list($settings['school_phone']) as $phone): ?>
-                            <a href="tel:<?php echo htmlspecialchars(app_phone_link($phone)); ?>" class="text-white-50">
-                                <i class="fas fa-phone me-2"></i><?php echo htmlspecialchars($phone); ?>
+                            <a href="tel:<?php echo htmlspecialchars(app_phone_link($phone)); ?>">
+                                <i class="fa-solid fa-phone me-2"></i><?php echo htmlspecialchars($phone); ?>
                             </a>
                         <?php endforeach; ?>
                         <?php foreach (app_setting_list($settings['school_email']) as $email): ?>
-                            <a href="mailto:<?php echo htmlspecialchars($email); ?>" class="text-white-50">
-                                <i class="fas fa-envelope me-2"></i><?php echo htmlspecialchars($email); ?>
+                            <a href="mailto:<?php echo htmlspecialchars($email); ?>">
+                                <i class="fa-solid fa-envelope me-2"></i><?php echo htmlspecialchars($email); ?>
                             </a>
                         <?php endforeach; ?>
                     </div>
-                </div>
-                <div class="col-lg-3 mb-4">
-                    <h5>Location</h5>
                     <?php if (!empty($cms_content['contact']['map_url']['content_value'])): ?>
-                    <div class="map-container-footer" style="height: 200px; border-radius: 8px; overflow: hidden;">
+                    <div class="mt-3" style="height: 150px; border-radius: 8px; overflow: hidden;">
                         <iframe src="<?php echo htmlspecialchars($cms_content['contact']['map_url']['content_value']); ?>" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
-                    <?php else: ?>
-                    <p class="text-white-50">Map not configured. Please set the map URL in admin settings.</p>
                     <?php endif; ?>
                 </div>
             </div>
-            <hr class="bg-secondary">
-            <div class="text-center">
-                <p class="mb-0">&copy; <?php echo date('Y'); ?> Kidzenia Kindergarten. All rights reserved.</p>
+
+            <div class="footer-bottom">
+                <p>&copy; <?php echo date('Y'); ?> Kidzenia Kindergarten. All Rights Reserved.</p>
             </div>
         </div>
     </footer>
